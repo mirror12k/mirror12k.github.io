@@ -1,0 +1,32 @@
+赤い: あかい: red
+青い: あおい: blue
+遅い: おそい: slow
+優しい: やさしい: kind
+弱い: よわい: weak
+狭い: せまい: narrow
+甘い: あまい : sweet
+強い: つよい: strong
+細い: ほそい: thin
+早い: はやい: fast
+辛い: からい: spicy
+若い: わかい: young
+新しい: あたらしい: new
+四角い: しかくい: rectangular
+熱い: あつい: hot
+近い: ちかい: near
+安い: やすい: cheap
+楽しい: たのしい: fun
+明るい: あかるい: bright
+暗い: くらい: dark
+
+危ない: あぶない: dangerous
+良い: いい/よい: good
+忙しい: いそがしい: busy
+大きい: おおきい: big
+小さい: ちいさい: small
+
+嬉しい: うれしい: happy
+静か: しずか: quiet
+寒い: さむい: cold
+長い: ながい: long
+
