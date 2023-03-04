@@ -15,6 +15,6 @@
 指輪:ゆびわ:ring
 
 きつい:tight
-ぴったり：perfect
+ぴったり:perfect
 
 
