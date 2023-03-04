@@ -1,0 +1,20 @@
+短い:みじかい:short
+涼しい:すずしい:cold
+太い:ふとい: thick
+美しい:うつくしい: beautiful
+可愛い:かわいい: cute
+綺麗:きれい: pretty
+鋭い:するどい:sharp 
+鈍い:にぶい:dull
+遠い:とおい:far
+
+浴衣:ゆかた:yukata
+着物:きもの:kimono
+帯:おび:sash
+背広:せびろ:suit
+指輪:ゆびわ:ring
+
+きつい:tight
+ぴったり：perfect
+
+

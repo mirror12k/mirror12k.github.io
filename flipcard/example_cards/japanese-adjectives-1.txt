@@ -25,6 +25,10 @@
 大きい: おおきい: big
 小さい: ちいさい: small
 
+汚い: きたない: dirty
+広い: ひろい: spacious
+古い: ふるい: old
+
 嬉しい: うれしい: happy
 静か: しずか: quiet
 寒い: さむい: cold
