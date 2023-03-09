@@ -3,8 +3,24 @@
 知る: しる: To know
 速い: はやい: Fast
 長い: ながい: Long (length)
-別に: べつに: red
+別に: べつに: Besides
 頭がいい: あたまがいい: Smart
 背が高い: せがたかい: Tall
 背が低い: せがひくい: Short
 眼鏡: めがね: Glasses
+
+口: くち: Mouth
+耳: みみ: Ear
+髪: かみ: Hair
+目: め: Eye
+歯: は: Tooth
+鼻: はな: Nose
+頭: あたま: Head
+顔: かお: Face
+手: て: Hand
+肩: かた: Shoulder
+背中: せなか: Back
+足: あし: Foot
+
+
+
