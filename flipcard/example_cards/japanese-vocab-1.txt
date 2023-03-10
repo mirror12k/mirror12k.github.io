@@ -22,5 +22,21 @@
 背中: せなか: Back
 足: あし: Foot
 
+料理する: りょうりする: To cook
+電話する: でんわする: To call
+掃除する: そうじする: To clean
+洗濯する: せんたくする: To do laundry
+運転する: うんてんする: To drive
+遅くなる: おそくなる: To be late
+作る: つくる: To make
+持っていく: もっていく: To take
+雨が降る: あめがふる: To rain
+今朝: けさ: This morning
+黒板: こくばん: Blackboard
+空気: くうき: Air
+会社員: かいしゃいん: Office worker
+
+
+
 
 
