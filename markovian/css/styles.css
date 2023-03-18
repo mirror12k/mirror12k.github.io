@@ -1,4 +1,10 @@
 
+@media (max-width:768px) {
+    h2 { font-size: 4vw; }
+}
+
+/*h2 { font-size: 2vw; }*/
+
 
 body {
   background-color: #F7F7E3;
