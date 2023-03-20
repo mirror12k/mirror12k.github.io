@@ -1,14 +1,36 @@
-違い: ちがい: Difference
-間違い: まちがい: Mistake
-完成: かんせい: Complete
-言葉: ことば: Word
-会話: かいわ: Conversation
-話し方: はなしかた: Style of speech
-生活: せいかつ: Life
-書き換える: かきかえる: To rewrite
-文: ぶん: Sentence
-あるようだ: Seems to be
+違い：ちがい：Difference
+間違い：まちがい：Mistake
+完成：かんせい：Complete
+言葉：ことば：Word
+会話：かいわ：Conversation
+話し方：はなしかた：Style of speech
+生活：せいかつ：Life
+書き換える：かきかえる：To rewrite
+文：ぶん：Sentence
+あるようだ：Seems to be
 
+必要がある：ひつようがある：There is a need
+平和：へいわ：Peace
+戦争：せんそう：War
+恐ろしい：おそろしい：Horror
+珍しい：めずらしい：Rare
+大切さ：たいせつさ：Importance
+伝える：つたえる：To convey
+練習：れんしゅう：Practice
+〜ようになった：It became so
+最近：さいきん：Recently
+
+母語：ぼご：Mother tongue
+できる：Can
+考える：かんがえる：To ponder
+適当：てきとう：Appropriate
+より〜：More
+書ける：かける：Can write
+例えば：たとえば：For example
+誰：だれ：Who
+分厚い：ぶあつい：Thick/Bulky
+文法：ぶんぽう：Grammar
+単語：たんご：Vocabulary
 
 
 
