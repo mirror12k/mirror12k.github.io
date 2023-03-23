@@ -11,3 +11,26 @@
 二十九日：にじゅうくにち：The 29th
 四月：しがつ：May
 
+一つ：ひとつ
+二つ：ふたつ
+三つ：みっつ
+四つ：よっつ
+五つ：いつつ
+六つ：むっつ
+七つ：ななつ
+八つ：やっつ
+九つ：ここのつ
+十：とお
+
+歌舞伎：かぶき：Kabuki theater
+相撲：すもう：Sumo wrestling
+茶道：さどう：Tea ceremony
+文楽：ぶんらく：Puppet theater
+能：のう：Masked musical drama
+柔道：じゅうどう：Judo
+華道：かどう：Flower arrangement
+剣道：けんどう：Kendo
+書道：しょどう：Calligraphy
+落語：らくご：Comedic storytelling
+
+
