@@ -1,0 +1,17 @@
+厚かましい：あつかましい：Brazen
+温い：ぬるい：Lukewarm
+狭い：せまい：Narrow
+羨ましい：うらやましい：Jealous (positive)
+妬ましい：ねたましい：Jealous (negative)
+固い：かたい：Hard (stone)
+話：はなし：Story
+濃い：こい：Strong (like coffee)
+薄い：うすい：Weak (like coffee)
+冷たい：つめたい：Cold (ice)
+オートバイ：Motorcycle
+バイク：Motorcycle (casual)
+格好いい：かっこういい：Cool
+場所：ばしょ：Place
+所：ところ：Place
+
+
