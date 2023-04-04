@@ -14,4 +14,18 @@
 場所：ばしょ：Place
 所：ところ：Place
 
+勿体無い：もったいない：Wasteful
+辛い(alt)：つらい：Tough (emotionally)
+辛い体験：つらいたいけん：Tough experience
+可笑しい：おかしい：Funny
+可怪しい事件：おかしいじけん：Suspicious incident
+可怪しい事故：おかしいじこ：Suspicious accident
+おかしいひと：Crazy Person
+
+別れ：わかれ：Farewell
+悲しい：かなしい：Sad
+嬉しい：うれしい：Happy
+思春期：ししゅんき：Puperty
+
+
 

@@ -5,22 +5,6 @@
 詰まらない：つまらない：Boring
 拉麺：ラーメン：Ramen
 ピザ：Pizza
-一週間：いっしゅうかん：One week
-二十日：はつか：The 20th
-二十四日：にじゅうよっか：The 24th
-二十九日：にじゅうくにち：The 29th
-四月：しがつ：May
-
-一つ：ひとつ
-二つ：ふたつ
-三つ：みっつ
-四つ：よっつ
-五つ：いつつ
-六つ：むっつ
-七つ：ななつ
-八つ：やっつ
-九つ：ここのつ
-十：とお
 
 歌舞伎：かぶき：Kabuki theater
 相撲：すもう：Sumo wrestling
@@ -32,5 +16,12 @@
 剣道：けんどう：Kendo
 書道：しょどう：Calligraphy
 落語：らくご：Comedic storytelling
+
+番組：ばんぐみ：TV program
+春：はる：Spring
+夏：なつ：Summer
+秋：あき：Fall
+冬：ふゆ：Winter
+患者：かんじゃ：Patient (hospital)
 
 

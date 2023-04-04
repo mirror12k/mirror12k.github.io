@@ -1,0 +1,34 @@
+先々月：せんせんげつ：The month before last
+先月：せんげつ：Last month
+今月：こんげつ：This month
+来月：らいげつ：Next month
+再来月：さらいげつ：The month after next
+一週間：いっしゅうかん：One week
+
+一日：ついたち：The 1st
+二日：ふつか：The 2nd
+三日：みっか：The 3rd
+四日：よっか：The 4th
+五日：いつか：The 5th
+六日：むいか：The 6th
+七日：なのか：The 7th
+八日：ようか：The 8th
+九日：ここのか：The 9th
+十日：とうか：The 10th
+二十日：はつか：The 20th
+二十四日：にじゅうよっか：The 24th
+二十九日：にじゅうくにち：The 29th
+
+四月：しがつ：May
+九月：くがつ：September
+
+一つ：ひとつ
+二つ：ふたつ
+三つ：みっつ
+四つ：よっつ
+五つ：いつつ
+六つ：むっつ
+七つ：ななつ
+八つ：やっつ
+九つ：ここのつ
+十：とお
