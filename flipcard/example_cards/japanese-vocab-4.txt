@@ -26,6 +26,12 @@
 悲しい：かなしい：Sad
 嬉しい：うれしい：Happy
 思春期：ししゅんき：Puperty
+悔しい：くやしい：Grude／mortifying
+もどかしい：Frustrating
+怖い：こわい：Scary
+丸い：まるい：Round(spherical)
+円い：まるい：Round(circular)
+
 
 
 

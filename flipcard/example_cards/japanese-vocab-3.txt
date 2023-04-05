@@ -23,5 +23,9 @@
 秋：あき：Fall
 冬：ふゆ：Winter
 患者：かんじゃ：Patient (hospital)
+地震：じしん：Earthquake
+幽霊：ゆうれい：Ghost
+安全意識：あんぜんいしき：Safety awareness
+
 
 
