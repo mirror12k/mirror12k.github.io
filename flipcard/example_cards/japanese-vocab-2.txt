@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 違い：ちがい：Difference
 間違い：まちがい：Mistake
 完成：かんせい：Complete

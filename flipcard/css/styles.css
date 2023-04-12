@@ -65,3 +65,52 @@ div.drop-area {
   font-weight: bold;
 }
 
+.flip-card .audio-button {
+  position: absolute;
+  bottom: 15;
+  right: 15;
+}
+
+.dark-theme .flip-card .audio-button {
+  background-color: #333;
+  border-color: #333;
+}
+
+.light-theme .flip-card .audio-button {
+  background-color: #ccc;
+  border-color: #ccc;
+  color: #222;
+}
+
+
+.tooltip-button {
+  position: relative;
+}
+
+.tooltip-button::after {
+  background-color: #333;
+  border-radius: 10px;
+  color: #ddd;
+  display: none;
+  padding: 10px 15px;
+  position: absolute;
+  text-align: center;
+  z-index: 999;
+}
+
+.tooltip-button:hover::after {
+  display: block;
+}
+
+.tooltip-button::after {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, calc(100% + 10px));
+}
+
+
+.tooltip-button.sort-button::after { content: 'Sort cards in alphabetic order' }
+.tooltip-button.shuffle-button::after { content: 'Shuffle cards in random order' }
+.tooltip-button.flip-button::after { content: 'Flip all cards upside down so that the reverse is up' }
+
+

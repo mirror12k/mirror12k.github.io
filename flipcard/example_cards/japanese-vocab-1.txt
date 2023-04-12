@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 親切な: しんせつな: Kind
 便利な: べんりな: Useful
 知る: しる: To know

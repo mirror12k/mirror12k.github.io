@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 零度：れいど：Zero degrees
 風邪：かぜ：A cold
 痒い：かゆい：Itchy

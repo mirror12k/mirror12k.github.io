@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 珍しい：めずらしい：Rare
 料理：りょうり：Cooking／Cuisine
 酸っぱい：すっぱい：Sour

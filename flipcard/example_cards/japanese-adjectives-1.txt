@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 赤い: あかい: red
 青い: あおい: blue
 遅い: おそい: slow

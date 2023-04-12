@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 短い:みじかい:short
 涼しい:すずしい:cold
 太い:ふとい: thick

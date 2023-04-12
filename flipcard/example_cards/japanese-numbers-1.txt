@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 先々月：せんせんげつ：The month before last
 先月：せんげつ：Last month
 今月：こんげつ：This month

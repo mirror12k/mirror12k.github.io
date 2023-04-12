@@ -1,3 +1,6 @@
+::locale:ja
+::sort_by_tail
+
 厚かましい：あつかましい：Brazen
 温い：ぬるい：Lukewarm
 狭い：せまい：Narrow
@@ -15,7 +18,7 @@
 所：ところ：Place
 
 勿体無い：もったいない：Wasteful
-辛い(alt)：つらい：Tough (emotionally)
+辛い：つらい：Tough (emotionally)
 辛い体験：つらいたいけん：Tough experience
 可笑しい：おかしい：Funny
 可怪しい事件：おかしいじけん：Suspicious incident
