@@ -4,6 +4,7 @@
 珍しい：めずらしい：Rare
 料理：りょうり：Cooking／Cuisine
 酸っぱい：すっぱい：Sour
+苦い：にがい：Bitter
 青白い：あおじろい：Pale face (bluish white)
 厳しい：きびしい：Strict
 甘い：あまい：Lenient
@@ -16,3 +17,19 @@
 易しい：やさしい：Easy
 連濁：れんだく
 週末：しゅうまつ：Weekend
+偶数：ぐうすう：Even numbers
+奇数：きすう：Odd numbers
+
+研究：けんきゅう：Research
+選ぶ：えらぶ：Select
+専攻：せんこう：Major
+遊ぶ：あそぶ：To play
+病気：びょうき：Illness
+約束：やくそく：Promise
+自分の：じぶんの：Your
+たいてい：Usually
+落ち着いて：おちついて：Calm down
+連絡する：れんらくする：Contact
+取る：とる：Take
+予約：よやく：Reservation
+約束：やくそく：Promise
