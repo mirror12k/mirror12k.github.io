@@ -25,7 +25,6 @@
 専攻：せんこう：Major
 遊ぶ：あそぶ：To play
 病気：びょうき：Illness
-約束：やくそく：Promise
 自分の：じぶんの：Your
 たいてい：Usually
 落ち着いて：おちついて：Calm down

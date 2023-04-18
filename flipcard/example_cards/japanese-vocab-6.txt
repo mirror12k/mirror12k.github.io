@@ -1,0 +1,20 @@
+::locale:ja
+::sort_by_tail
+
+心配：しんぱい：Worry
+ずっと：All the time
+論文：ろんぶん：Thesis／essay
+件：けん：Matter／subject
+失礼します：しつれいします：Excuse me
+元気：げんき：Well
+直します：なおします：Fix
+書き直す：かきなおす：To rewrite
+就活：しゅうかつ：Job hunting
+卒業旅行：そつぎょうりょこう：Graduation trip
+
+脂っこい：あぶらっこい：Fatty/oily
+恐い：こわい：Scary
+頭が固い：あたまがかたい：Hard-headed
+段々：だんだん：Gradually
+
+
