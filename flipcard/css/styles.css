@@ -44,6 +44,15 @@ div.drop-area {
   height: 400px;
 }
 
+.flip-card.small-card.match-card {
+  height: 100px;
+}
+
+.flip-card.selected .card {
+  border: #ABDAFC solid 3px;
+  border-radius: 5px;
+}
+
 .flip-card.small-card {
   height: 200px;
 }
