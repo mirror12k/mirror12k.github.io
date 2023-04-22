@@ -1,0 +1,14 @@
+::locale:ja
+::sort_by_tail
+
+多分：たぶん：Perhaps
+新聞：しんぶん：Newspaper
+優秀：ゆうしゅう：Excellent
+弁護士：べんごし：Lawyer
+溶ける：とける：To melt
+憎い：にくい：Hateful
+倍：ばい：Double
+命：いのち：Life
+雷：かみなり：Thunder
+無理：むり：Impossible
+久々：ひさびさ：Long time no see
