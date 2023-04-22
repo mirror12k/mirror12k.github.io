@@ -17,6 +17,27 @@ div.drop-area {
 }
 
 
+.menu-flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+/*  height: 400px;*/
+}
+
+.menu-flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.menu-flip-card.doflip .menu-flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+
+
 .flip-card {
   background-color: transparent;
   perspective: 1000px;
