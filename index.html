@@ -4,6 +4,16 @@
 	<title>mirror12k's profile</title>
 	<link rel="stylesheet" type="text/css" href="/bootstrap.min.css">
 	<link rel="stylesheet" type="text/css" href="/style.css">
+	<script type="text/javascript">
+		window.addEventListener("load", () => {
+			document.querySelectorAll(".video-container").forEach(video => {
+				video.addEventListener("mouseover", () => video.querySelector('video').play());
+				video.addEventListener("mouseleave", () => video.querySelector('video').pause());
+				// video.querySelector('video').pause();
+			});
+		});
+
+	</script>
 </head>
 <body>
 	<div class="p-4 text-center">
@@ -11,7 +21,7 @@
 		<div class="row">
 			<div class="col-md-4">
 				<div class="video-container">
-					<video autoplay="" muted="" playsinline="" loop="">
+					<video muted="" playsinline="" loop="">
 						<source src="videos/box3d-2.webm" type="video/webm">
 					</video>
 					<a href="/resonator-box3d.html">
@@ -24,7 +34,7 @@
 			</div>
 			<div class="col-md-4">
 				<div class="video-container">
-					<video autoplay="" muted="" playsinline="" loop="">
+					<video muted="" playsinline="" loop="">
 						<source src="videos/cyberwolf-1.webm" type="video/webm">
 					</video>
 					<a href="/resonator-cyberwolf-engine.html">
@@ -37,7 +47,7 @@
 			</div>
 			<div class="col-md-4">
 				<div class="video-container">
-					<video autoplay="" muted="" playsinline="" loop="">
+					<video muted="" playsinline="" loop="">
 						<source src="videos/splash-tourney-1.webm" type="video/webm">
 					</video>
 					<a href="/resonator-splashtourney.html">
