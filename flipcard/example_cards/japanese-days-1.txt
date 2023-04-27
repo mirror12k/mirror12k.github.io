@@ -1,0 +1,25 @@
+::locale:ja
+::sort_by_tail
+
+一昨日：おととい：The day before last
+昨日：きのう：Yesterday
+今日：きょう：Today
+明日：あした：Tomorrow
+今朝：けさ：This morning
+今晩：こんばん：This evening
+一昨年：おととし：The year before last
+去年：きょねん：Last year
+今年：ことし：This year
+来年：らいねん：Next year
+再来年：さらいねん：The year after next
+先々月：せんせんげつ：The month before last
+先月：せんげつ：Last month
+今月：こんげつ：This month
+来月：らいげつ：Next month
+再来月：さらいげつ：The month after next
+
+先週：せんしゅう：Last week
+今週：こんしゅう：This week
+週末：しゅうまつ：Weekend
+
+

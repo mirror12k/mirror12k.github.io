@@ -12,3 +12,16 @@
 雷：かみなり：Thunder
 無理：むり：Impossible
 久々：ひさびさ：Long time no see
+
+貧乏：びんぼう：Poor
+お餅：おもち：Rice cake
+雪：ゆき：Snow
+地蔵：じぞう：Stone idol
+昔話：むかしばなし：Old tale
+激しい：はげしい：Intense
+積もる：つもる：To pile up
+
+恥ずかしい：はずかしい：Shy/embarrassed
+馬鹿馬鹿しい：ばかばかしい：Absurd
+喧しい：やかましい：Noisy (annoying)
+騒々しい：そうぞうしい：Noisy (descriptive)
