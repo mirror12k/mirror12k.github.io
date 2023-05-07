@@ -1,0 +1,33 @@
+::locale:ja
+::sort_by_tail
+
+否定的だ：ひていてきだ：Negative
+肯定的だ：こうていてきだ：Positive
+綺麗だ：きれいだ：Pretty
+きれいだ：Clean
+醜い：みにくい：Ugly
+静かだ：しずかだ：Quiet
+賑やかだ：にぎやか：Bustling／Lively
+悲観的だ：ひかんてきだ：Pessimistic
+楽観的だ：らっかんてきだ：Optimistic
+便利だ：べんりだ：Convenient
+不便だ：ふべんだ：Inconvenient
+五月蝿い：うるさい：Noisy
+無：む：(None)
+不：ふ：(Simple negation)
+非：ひ：(Strong negation)
+人間的だ：にんげんてきだ：Humane
+非人間的だ：ひにんげんてきだ：Inhumane
+現実的だ：げんじつてきだ：Realistic
+非現実的だ：ひげんじつてきだ：Unrealistic
+有名だ：ゆうめいだ：Famous
+無名だ：むめいだ：Anonymous
+お洒落だ：おしゃれだ：Stylish
+スタイリッシュだ：Stylish
+素晴らしい：すばらしい：Wonderful
+素敵だ：すてきだ：Lovely/Wonderful
+
+
+
+
+
