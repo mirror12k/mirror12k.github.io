@@ -7,7 +7,7 @@
 きれいだ：Clean
 醜い：みにくい：Ugly
 静かだ：しずかだ：Quiet
-賑やかだ：にぎやか：Bustling／Lively
+賑やかだ：にぎやか：Bustling/Lively
 悲観的だ：ひかんてきだ：Pessimistic
 楽観的だ：らっかんてきだ：Optimistic
 便利だ：べんりだ：Convenient
@@ -26,6 +26,21 @@
 スタイリッシュだ：Stylish
 素晴らしい：すばらしい：Wonderful
 素敵だ：すてきだ：Lovely/Wonderful
+
+単純だ：たんじゅんだ：Simple
+複雑だ：ふくざつだ：Complex/Complicated
+具体的だ：ぐたいてきだ：Concrete/Specific
+抽象的だ：ちゅうしょうてきだ：Abstract
+健康だ：けんこうだ：Healthy
+不健康だ：ふけんこうだ：Unhealthy
+贅沢だ：ぜいたくだ：Lavish
+質素だ：しっそだ：Frugal
+駄目だ：だめだ：Impossible
+自由だ：じゆうだ：Free (freedom)
+不自由だ：ふじゆうだ：Restricted
+
+
+
 
 
 
