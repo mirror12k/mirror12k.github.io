@@ -1,0 +1,36 @@
+::locale:ja
+::sort_by_tail
+
+騒がしい：さわがしい：Noisy (soft)
+清潔だ：せいけつだ：Hygenic
+不潔だ：ふけつだ：Unsanitary/Filthy
+暇だ：ひまだ：Free (Available)
+忙しい：いそがしい：Busy
+頑丈だ：がんじょうだ：Robust (Sturdy)
+脆い：もろい：Fragile
+丈夫だ：じょうぶだ：Durable
+曖昧だ：あいまいだ：Ambiguous
+はっきりしている：Clearly
+明らかだ：あきらかだ：Clear
+明白だ：めいはくだ：Obvious
+消極的だ：しょうきょくてきだ：Passive／Hesitant
+積極的だ：せっきょくてきだ：Proactive
+不自然だ：ふしぜんだ：Unnatural
+自然だ：しぜんだ：Natural
+
+寝坊する：ねぼうする：To oversleep
+天気予報：てんきよほう：Weather forecast
+出版する：しゅっぱんする：To publish
+販売：はんばい：Sales
+生徒：せいと：Pupil／Student
+新鮮だ：しんせんだ：Fresh
+難解だ：なんかいだ：Difficult
+特別だ：とくべつだ：Special
+
+
+
+
+
+
+
+
