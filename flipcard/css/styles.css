@@ -142,5 +142,7 @@ div.drop-area {
 .tooltip-button.sort-button::after { content: 'Sort cards in alphabetic order' }
 .tooltip-button.shuffle-button::after { content: 'Shuffle cards in random order' }
 .tooltip-button.flip-button::after { content: 'Flip all cards upside down so that the reverse is up' }
+.tooltip-button.matchcards-button::after { content: 'Change to match-cards mode' }
+.tooltip-button.filter-difficult-button::after { content: 'Remove any cards that havent been flipped yet' }
 
 
