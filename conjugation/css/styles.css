@@ -1,0 +1,146 @@
+body.dark-theme {
+	background-color: #222;
+	color: #ccc;
+}
+
+body.dark-theme .form-control {
+	color: #ddd;
+}
+
+.dark-theme .form-control, .dark-theme .card {
+	background-color: #444;
+	border-color: #555;
+}
+
+div.drop-area {
+	width: 100%; height: 100px; border: 1px solid #222; border-radius: 10px;
+}
+
+
+.menu-flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+/*  height: 400px;*/
+}
+
+.menu-flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+}
+
+.menu-flip-card.doflip .menu-flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+
+
+.flip-card {
+  background-color: transparent;
+  perspective: 1000px;
+  height: 400px;
+}
+
+.flip-card.small-card.match-card {
+  height: 100px;
+}
+
+.flip-card.selected .card {
+  border: #ABDAFC solid 3px;
+  border-radius: 5px;
+}
+
+.flip-card.small-card {
+  height: 200px;
+}
+
+.flip-card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+
+.flip-card.doflip .flip-card-inner {
+  transform: rotateY(180deg);
+}
+
+.flip-card-front, .flip-card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.light-theme .flip-card-front, .light-theme .flip-card-back {
+  background-color: #E9EBED;
+}
+
+.dark-theme .flip-card-front, .dark-theme .flip-card-back {
+/*  background-color: #44515A;*/
+}
+
+.flip-card-back {
+  transform: rotateY(180deg);
+}
+
+.select-button {
+  width: 100%;
+  height: 200px;
+  font-weight: bold;
+}
+
+.flip-card .audio-button {
+  position: absolute;
+  bottom: 15;
+  right: 15;
+}
+
+.dark-theme .flip-card .audio-button {
+  background-color: #333;
+  border-color: #333;
+}
+
+.light-theme .flip-card .audio-button {
+  background-color: #ccc;
+  border-color: #ccc;
+  color: #222;
+}
+
+
+.tooltip-button {
+  position: relative;
+}
+
+.tooltip-button::after {
+  background-color: #333;
+  border-radius: 10px;
+  color: #ddd;
+  display: none;
+  padding: 10px 15px;
+  position: absolute;
+  text-align: center;
+  z-index: 999;
+}
+
+.tooltip-button:hover::after {
+  display: block;
+}
+
+.tooltip-button::after {
+  bottom: 0;
+  left: 50%;
+  transform: translate(-50%, calc(100% + 10px));
+}
+
+
+.tooltip-button.sort-button::after { content: 'Sort cards in alphabetic order' }
+.tooltip-button.shuffle-button::after { content: 'Shuffle cards in random order' }
+.tooltip-button.flip-button::after { content: 'Flip all cards upside down so that the reverse is up' }
+
+
