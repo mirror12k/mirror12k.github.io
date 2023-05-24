@@ -1,0 +1,42 @@
+::locale:ja
+::sort_by_tail
+
+事故中心的だ：じこちゅうしんてきだ：Self-centered
+我儘だ：わがままだ：Selfish
+効果的だ：こうかてきだ：Effective
+効果がない：こうかがない：Ineffective
+意外だ：いがいだ：Unexepected
+当然だ：とうぜんだ：Rightful/Of course
+確実だ：かくじつだ：Certain/Sure
+不確実だ：ふかくじつだ：Uncertain/Unsure
+哲学的だ：てつがくてきだ：Philosophical
+世俗的だ：せぞくてきだ：Worldly (vulgar)
+純粋だ：じゅんすいだ：Platonic/Pure
+肉欲的だ：にくよくてきだ：Fleshy
+真面目だ：まじめだ：Diligent/Hard-working
+不真面目だ：ふまじめだ：Flippant/Frivolous
+真剣だ：しんけんだ：Serious
+
+効果：こうか：Effect
+諺：ことわざ：Proverb
+曲：きょく：Song (instrumental)
+
+邪悪だ：じゃあくだ：Evil
+善良だ：ぜんりょうだ：Good
+不純だ：ふじゅんだ：Impure
+利他的だ：りたてきだ：Altruistic
+不確かだ：ふたしかだ：Unsure
+得意だ：とくいだ：Confident at (Good at)
+苦手だ：にがてだ：Not confident at (Avoiding)
+
+時差ボケ：じさぼけ：Jet lag
+眠い：ねむい：Sleepy
+田舎：いなか：Rural／Countryside
+古里：ふるさと：Hometown
+村：むら：Village
+都会：とかい：City
+誠実だ：せいじつだ：Sincere
+店員：てんいん：Clerk
+数学：すうがく：Mathematics
+女性：じょせい：Female
+男性：だんせい：Male
