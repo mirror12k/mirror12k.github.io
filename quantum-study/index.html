@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+
+        <title>PyScript Quantum Calculator</title>
+
+        <link
+            rel="stylesheet"
+            href="https://pyscript.net/latest/pyscript.css"
+        />
+        <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    </head>
+
+    <body>
+        <nav class="navbar" style="background-color: #000000">
+            <div class="app-header">
+                <a href="/">
+                    <img src="./logo.png" class="logo" />
+                </a>
+                <a class="title" href="" style="color: #f0ab3c">Quantum Calculator</a>
+            </div>
+        </nav>
+
+        <py-config>
+            plugins = []
+            [[fetch]]
+            files = ["./quantum.py", "./browser-processor.py"]
+        </py-config>
+
+        <section class="pyscript">
+            <py-script src="./quantum.py"></py-script>
+            <py-script src="./browser-processor.py"></py-script>
+        </section>
+
+        <div>
+            <textarea id="run-content" class="py-input" type="text" rows="20" style="width: 100%">
+hadamard 0
+cnot 0,1
+</textarea>
+            <button id="run-btn" class="py-button" type="submit" py-click="run_quantum()">
+                Run Quantum
+            </button>
+        </div>
+    </body>
+</html>
