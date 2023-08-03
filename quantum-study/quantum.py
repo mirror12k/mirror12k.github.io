@@ -489,7 +489,7 @@ class MultiTensor(object):
 		if type(other) is MultiTensor:
 			if len(self._t) != len(other._t):
 				raise Exception('invalid length multi-tensor comparison: {} ?= {}'.format(str(self), str(other)))
-			return all( self._t[i] == other._t[i] for i in range(len(self._t)) )
+			return all( str(self._t[i]) == str(other._t[i]) for i in range(len(self._t)) )
 		elif type(other) is str:
 			return str(self) == other
 		else:
@@ -520,6 +520,16 @@ def composite_matrices(m2,m1):
 	t1 = transpose_matrix(m1)
 	return transpose_matrix([ _mul2(r, m2) for r in t1 ])
 
+
+def pad_gates(gate, gatelength, position, length):
+	return ("I*" * (position - gatelength + 1)) + gate + ("*I" * (length - position - gatelength))
+def pad_gates2(gate, position, length):
+	gatelength = int(math.log2(len(gate)))
+	return filter(lambda s: s != '', ['*'.join(['I'] * (position - gatelength + 1)), gate, '*'.join(['I'] * (length - position - gatelength + 1))])
+def pad_gates3(gate, position, length):
+	gatelength = int(math.log2(len(gate)))
+	return filter(lambda s: s != '', ['*'.join(['I'] * (length - position - gatelength)), gate, '*'.join(['I'] * position)])
+
 class MatrixGate(object):
 	def __init__(self, *gates):
 		self._t = tensor_matrix2(*[ gate_from_string(s) if type(s) == str else s for s in gates ])
@@ -544,8 +554,9 @@ class MatrixGate(object):
 			raise Exception('invalid other:' + str(other))
 	def size(self):
 		return int(math.log2(len(self._t)))
-	# def transpose(self):
-	# 	return 
+
+	def pad_to_size(self, position, size):
+		return MatrixGate(*pad_gates3(self._t, position, size))
 		
 
 
@@ -712,12 +723,6 @@ debug('MultiTensor.from_pattern(4) * MatrixGate(expando_matrix4(expando_matrix4(
 test('MultiTensor.from_pattern(4) * MatrixGate(expando_matrix4(expando_matrix4(SWAP_matrix))) == "|0000>,|1000>,|0010>,|1010>,|0100>,|1100>,|0110>,|1110>,|0001>,|1001>,|0011>,|1011>,|0101>,|1101>,|0111>,|1111>"')
 
 
-
-def pad_gates(gate, gatelength, position, length):
-	return ("I*" * (position - gatelength + 1)) + gate + ("*I" * (length - position - gatelength))
-def pad_gates2(gate, position, length):
-	gatelength = int(math.log2(len(gate)))
-	return filter(lambda s: s != '', ['*'.join(['I'] * (position - gatelength + 1)), gate, '*'.join(['I'] * (length - position - gatelength + 1))])
 
 def parse_instruction(inst):
 	inst = inst.lower()
@@ -1055,7 +1060,7 @@ tdagger 1
 cnot 0,1
 tgate 0
 sgate 1
-	''')._t))
+''')._t))
 
 
 # rebuilds the matrix using SWAPs until a,b are in 1,0 order for standard gates
@@ -1141,9 +1146,117 @@ def build_arbitrary_3gate_matrix(m, a, b, c):
 
 
 
+
+
 print('CCNOT 2,1,0\n', '\n'.join([ '\t' + str(t) + ' -> ' + str(t * MatrixGate("CCNOT")) for t in MultiTensor.from_pattern(3)._t ]))
 print('CCNOT 2,0,1\n', '\n'.join([ '\t' + str(t) + ' -> ' + str(t * build_arbitrary_3gate_matrix(MatrixGate("CCNOT"), 2,0,1)) for t in MultiTensor.from_pattern(3)._t ]))
 print('CCNOT 1,0,2\n', '\n'.join([ '\t' + str(t) + ' -> ' + str(t * build_arbitrary_3gate_matrix(MatrixGate("CCNOT"), 1,0,2)) for t in MultiTensor.from_pattern(3)._t ]))
 print('CCNOT 0,2,3\n', '\n'.join([ '\t' + str(t) + ' -> ' + str(t * build_arbitrary_3gate_matrix(MatrixGate("CCNOT"), 0,2,3)) for t in MultiTensor.from_pattern(4)._t ]))
 # print('CCNOT 0,2,4\n', '\n'.join([ '\t' + str(t) + ' -> ' + str(t * build_arbitrary_3gate_matrix(MatrixGate("CCNOT"), 0,2,4)) for t in MultiTensor.from_pattern(5)._t ]))
+
+
+def parse_arguments(args):
+	return map(lambda s: int(s.strip()), args.split(','))
+
+def parse_instruction_to_matrix2(inst, gatesize):
+	single_gate_matrices = {
+		'not': NOTGATE_matrix,
+		'hadamard': HADAMARD_matrix,
+		'tgate': T_matrix,
+		'tdagger': T_dagger_matrix,
+		'zgate': Z_matrix,
+		'sgate': S_matrix,
+	}
+	two_gate_matrices = {
+		'cnot': CNOT_matrix,
+		'swap': SWAP_matrix,
+	}
+	three_gate_matrices = {
+		'ccnot': CCNOT_matrix,
+		'cswap': CSWAP_matrix,
+	}
+
+	inst = inst.lower()
+	(inst_type, position) = inst.split(' ', 1)
+	if inst_type in single_gate_matrices:
+		position = int(position)
+		return MatrixGate(single_gate_matrices[inst_type]).pad_to_size(position, gatesize)
+	elif inst_type in two_gate_matrices:
+		(position_a, position_b) = parse_arguments(position)
+		left_position = min(position_a, position_b)
+		return build_arbitrary_2gate_matrix(MatrixGate(two_gate_matrices[inst_type]), position_a, position_b).pad_to_size(left_position, gatesize)
+	elif inst_type in three_gate_matrices:
+		(position_a, position_b, position_c) = parse_arguments(position)
+		left_position = min(position_a, position_b, position_c)
+		return build_arbitrary_3gate_matrix(MatrixGate(three_gate_matrices[inst_type]), position_a, position_b, position_c).pad_to_size(left_position, gatesize)
+	else:
+		raise Exception('invalid instruction:' + str(inst))
+
+def compile_instructions_block_matrix2(gatesize, *insts):
+	# print("compiling fun: {}".format(insts))
+	insts = flatten([ filter(lambda s: s != '', map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	matrices = [ parse_instruction_to_matrix2(i, gatesize) if type(i) is str else i for i in insts ]
+	op_matrix = MatrixGate(pad_gates("I", 1, gatesize - 1, gatesize))
+	for m in reversed(matrices):
+		op_matrix *= m
+	return op_matrix
+
+# m = compile_instructions_block_matrix2(4, "ccnot 2,1,0")
+# debug('MultiTensor.from_pattern(4) * m')
+
+
+
+# turns out this is just a very long and complicated ccnot gate :P
+fun = parse_instructions_block('''
+hadamard 2
+cnot 1,2
+tdagger 2
+cnot 0,2
+tgate 2
+cnot 1,2
+tdagger 2
+cnot 0,2
+tgate 2
+hadamard 2
+tdagger 1
+cnot 0,1
+tdagger 1
+cnot 0,1
+tgate 0
+sgate 1
+''')
+print("test1")
+for t in MultiTensor.from_pattern(4)._t:
+	print(t, '->', fun(t))
+
+m = compile_instructions_block_matrix2(4, """
+hadamard 2
+cnot 1,2
+tdagger 2
+cnot 0,2
+tgate 2
+cnot 1,2
+tdagger 2
+cnot 0,2
+tgate 2
+hadamard 2
+tdagger 1
+cnot 0,1
+tdagger 1
+cnot 0,1
+tgate 0
+sgate 1
+""")
+print("test2")
+for t in MultiTensor.from_pattern(4)._t:
+	print(t, '->', t * m)
+print("test3")
+for t in MultiTensor.from_pattern(4)._t:
+	print(t, '->', t * compile_instructions_block_matrix2(4, "ccnot 0,1,2"))
+
+test('fun(MultiTensor.from_pattern(4)) == MultiTensor.from_pattern(4) * m')
+test('fun(MultiTensor.from_pattern(4)) == MultiTensor.from_pattern(4) * compile_instructions_block_matrix2(4, "ccnot 0,1,2")')
+test('fun(MultiTensor.from_pattern(4)) != MultiTensor.from_pattern(4) * compile_instructions_block_matrix2(4, "ccnot 0,1,3")')
+
+
 
