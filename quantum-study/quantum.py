@@ -800,7 +800,7 @@ def parse_instruction_to_matrix(inst, gatesize):
 		if position_a == position_b:
 			raise Exception("invalid command: " + inst)
 		gate = expando_matrix_times(gate, abs(position_b - position_a) - 1)
-		return MatrixGate(*pad_gates2(gate, gatesize - position - 1, gatesize))
+		return MatrixGate(*pad_gates3(gate, position, gatesize))
 	else:
 		raise Exception('invalid instruction:' + str(inst))
 
@@ -1201,6 +1201,61 @@ def compile_instructions_block_matrix2(gatesize, *insts):
 		op_matrix *= m
 	return op_matrix
 
+def parse_instruction_to_str(inst, gatesize):
+	single_gate_matrices = {
+		'not': 'X',
+		'hadamard': 'H',
+		'tgate': 'T',
+		'tdagger': 't',
+		'zgate': 'Z',
+		'sgate': 'S',
+	}
+	two_gate_matrices = {
+		'cnot': 'oX',
+		'swap': 'xx',
+	}
+	three_gate_matrices = {
+		'ccnot': 'ooX',
+		'cswap': 'oxx',
+	}
+
+	inst = inst.lower()
+	(inst_type, position) = inst.split(' ', 1)
+	base_str = ['-'] * gatesize
+	if inst_type in single_gate_matrices:
+		position = int(position)
+		base_str[position] = single_gate_matrices[inst_type]
+	elif inst_type in two_gate_matrices:
+		(position_a, position_b) = parse_arguments(position)
+		min_position = min(position_a, position_b)
+		max_position = max(position_a, position_b)
+		for i in range(min_position+1,max_position):
+			base_str[i] = '|'
+		base_str[position_a] = two_gate_matrices[inst_type][0]
+		base_str[position_b] = two_gate_matrices[inst_type][1]
+	elif inst_type in three_gate_matrices:
+		(position_a, position_b, position_c) = parse_arguments(position)
+		min_position = min(position_a, position_b, position_c)
+		max_position = max(position_a, position_b, position_c)
+		for i in range(min_position+1,max_position):
+			base_str[i] = '|'
+		base_str[position_a] = three_gate_matrices[inst_type][0]
+		base_str[position_b] = three_gate_matrices[inst_type][1]
+		base_str[position_c] = three_gate_matrices[inst_type][2]
+	else:
+		raise Exception('invalid instruction:' + str(inst))
+	return ''.join(base_str)
+
+def compile_instructions_str(gatesize, *insts):
+	# print("compiling fun: {}".format(insts))
+	insts = flatten([ filter(lambda s: s != '', map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	strs = [ parse_instruction_to_str(i, gatesize) if type(i) is str else i for i in insts ]
+	lines = [ ['[]-'] + ['-'] * (len(strs) * 2) + ['-[]'] for i in range(gatesize) ]
+	for si in range(len(strs)):
+		for i in range(gatesize):
+			lines[i][si*2+1] = strs[si][i]
+	return '\n'.join( ''.join(l) for l in lines )
+
 # m = compile_instructions_block_matrix2(4, "ccnot 2,1,0")
 # debug('MultiTensor.from_pattern(4) * m')
 
@@ -1259,4 +1314,30 @@ test('fun(MultiTensor.from_pattern(4)) == MultiTensor.from_pattern(4) * compile_
 test('fun(MultiTensor.from_pattern(4)) != MultiTensor.from_pattern(4) * compile_instructions_block_matrix2(4, "ccnot 0,1,3")')
 
 
+print(compile_instructions_str(4, """
+hadamard 2
+cnot 1,2
+tdagger 2
+cnot 0,2
+tgate 2
+cnot 1,2
+tdagger 2
+cnot 0,2
+tgate 2
+hadamard 2
+tdagger 1
+cnot 0,1
+tdagger 1
+cnot 0,1
+tgate 0
+sgate 1
+"""))
 
+
+
+
+m = compile_instructions_block_matrix2(4, """
+ccnot 0,3,1
+""")
+for t in MultiTensor.from_pattern(4)._t:
+	print(t, '->', t * m)
