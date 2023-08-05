@@ -33,6 +33,8 @@ def _m2(*args):
 	return tuple( tuple( complex(v, 0) for v in args[x*size:x*size+size] ) for x in range(size) )
 
 sqrt1_2 = 1/sqrt(2)
+sqrt1_3 = 1/sqrt(3)
+sqrt1_4 = 1/sqrt(4)
 
 zero = a = _c(1,0)
 one = b = _c(0,1)
@@ -405,12 +407,32 @@ Long_CNOT_matrix = _m2(
 	0,0,0,0,0,0,0,1,
 	0,0,0,0,0,0,1,0)
 
+sqrt1_2
+
 def is_power_of_2(x):
 	return x and (not(x & (x - 1)))
 def is_one_bit_difference(a, b):
 	return is_power_of_2(a ^ b)
 def difference_positions(a, b):
 	return [ i for i in range(len(a)) if a[i] != b[i] ]
+def format_number_pretty(n):
+	if abs(n - sqrt1_2) < 0.0000000001:
+		if n > 0:
+			return '1/√2'
+		else:
+			return '-1/√2'
+	elif abs(n - sqrt1_3) < 0.0000000001:
+		if n > 0:
+			return '1/√3'
+		else:
+			return '-1/√3'
+	elif abs(n - sqrt1_4) < 0.0000000001:
+		if n > 0:
+			return '1/√4'
+		else:
+			return '-1/√4'
+	else:
+		return '{0:f}'.format(n)
 
 def str_tensor_pretty(z):
 	size = math.log2(len(z))
@@ -438,12 +460,22 @@ def str_tensor_pretty(z):
 				k = list(k1)
 				k[p] = '-'
 				return ''.join(k)
-			else:
-				return str_tensor(z)
-		else:
-			return str_tensor(z)
-	else:
-		return str_tensor(z)
+	# 		else:
+	# 			return str_tensor(z)
+	# 	else:
+	# 		return str_tensor(z)
+	# else:
+	# 	return str_tensor(z)
+
+	# final catch case
+	size = math.log2(len(z))
+	f = "{0}|{1:0" + str(int(size)) + "b}>"
+	total = sum( sqrt(zi.real**2 + zi.imag**2) for zi in z )
+
+	states = [ f.format(format_number_pretty(sqrt(z[i].real**2 + z[i].imag**2)), i) for i in range(len(z)) if sqrt(z[i].real**2 + z[i].imag**2) > 0.0000000001 ]
+	if len(states) == 1 and not abs(total - 1) > 0.0000000001:
+		return ''.join([ ("|{0:0" + str(int(size)) + "b}>").format(i) for i in range(len(z)) if sqrt(z[i].real**2 + z[i].imag**2) > 0.0000000001 ])
+	return ' + '.join(states)
 
 
 class Tensor(object):
@@ -1338,6 +1370,8 @@ sgate 1
 
 m = compile_instructions_block_matrix2(4, """
 ccnot 0,3,1
+hadamard 0
+cnot 0,1
 """)
 for t in MultiTensor.from_pattern(4)._t:
 	print(t, '->', t * m)
