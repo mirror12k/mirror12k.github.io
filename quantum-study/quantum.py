@@ -1221,27 +1221,27 @@ def parse_instruction_to_str(inst, gatesize):
 
 	inst = inst.lower()
 	(inst_type, position) = inst.split(' ', 1)
-	base_str = ['-'] * gatesize
+	base_str = [ '-' if i % 2 == 0 else ' ' for i in range(gatesize * 2 - 1) ]
 	if inst_type in single_gate_matrices:
 		position = int(position)
-		base_str[position] = single_gate_matrices[inst_type]
+		base_str[2 * position] = single_gate_matrices[inst_type]
 	elif inst_type in two_gate_matrices:
 		(position_a, position_b) = parse_arguments(position)
 		min_position = min(position_a, position_b)
 		max_position = max(position_a, position_b)
-		for i in range(min_position+1,max_position):
+		for i in range(min_position * 2,max_position*2):
 			base_str[i] = '|'
-		base_str[position_a] = two_gate_matrices[inst_type][0]
-		base_str[position_b] = two_gate_matrices[inst_type][1]
+		base_str[2 * position_a] = two_gate_matrices[inst_type][0]
+		base_str[2 * position_b] = two_gate_matrices[inst_type][1]
 	elif inst_type in three_gate_matrices:
 		(position_a, position_b, position_c) = parse_arguments(position)
 		min_position = min(position_a, position_b, position_c)
 		max_position = max(position_a, position_b, position_c)
-		for i in range(min_position+1,max_position):
+		for i in range(min_position * 2,max_position*2):
 			base_str[i] = '|'
-		base_str[position_a] = three_gate_matrices[inst_type][0]
-		base_str[position_b] = three_gate_matrices[inst_type][1]
-		base_str[position_c] = three_gate_matrices[inst_type][2]
+		base_str[2 * position_a] = three_gate_matrices[inst_type][0]
+		base_str[2 * position_b] = three_gate_matrices[inst_type][1]
+		base_str[2 * position_c] = three_gate_matrices[inst_type][2]
 	else:
 		raise Exception('invalid instruction:' + str(inst))
 	return ''.join(base_str)
@@ -1250,9 +1250,9 @@ def compile_instructions_str(gatesize, *insts):
 	# print("compiling fun: {}".format(insts))
 	insts = flatten([ filter(lambda s: s != '', map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
 	strs = [ parse_instruction_to_str(i, gatesize) if type(i) is str else i for i in insts ]
-	lines = [ ['[]-'] + ['-'] * (len(strs) * 2) + ['-[]'] for i in range(gatesize) ]
+	lines = [ ['[]-'] + ['-'] * (len(strs) * 2) + ['-[]'] if i % 2 == 0 else ['   '] + [' '] * (len(strs) * 2) + ['   '] for i in range(gatesize * 2 - 1) ]
 	for si in range(len(strs)):
-		for i in range(gatesize):
+		for i in range(len(lines)):
 			lines[i][si*2+1] = strs[si][i]
 	return '\n'.join( ''.join(l) for l in lines )
 

@@ -35,10 +35,11 @@
         </section>
 
         <div>
-            <textarea id="run-content" class="py-input" type="text" rows="20" style="width: 100%">
+            <textarea id="run-content" class="py-input" type="text" rows="12" style="width: 100%">
 hadamard 0
 cnot 0,1
 </textarea>
+            <div style="width: 100% min-height: 200px"><pre id="circuit-diagram" class="py-input" type="text" style="width: 100% min-height: 200px"></pre></div>
             <button id="run-btn" class="py-button" type="submit" py-click="run_quantum()">
                 Run Quantum
             </button>
