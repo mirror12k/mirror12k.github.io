@@ -10,9 +10,18 @@ def run_quantum(*args, **kws):
 
 	print("##################################################")
 	# fun = parse_instructions_block(prog)
-	m = compile_instructions_block_matrix2(4, prog)
-	s = compile_instructions_str(4, prog)
+	# m = compile_instructions_block_matrix2(4, prog)
+	f = compile_instructions3_to_fun(prog)
+	# s = compile_instructions_str(4, prog)
+	s = compile_instructions_str2(prog)
 	circuit_diagram.element.innerText = s
 	print(s)
-	for t in MultiTensor.from_pattern(4)._t:
-		print(t, '->', t * m)
+	# for t in MultiTensor.from_pattern(4)._t:
+	# 	print(t, '->', t * m)
+	res = f()
+	if type(res) is MultiTensor:
+		for t in res._t:
+			print(t)
+	else:
+		print(res)
+

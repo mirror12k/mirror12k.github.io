@@ -36,6 +36,11 @@ def _m2(*args):
 sqrt1_2 = 1/sqrt(2)
 sqrt1_3 = 1/sqrt(3)
 sqrt1_4 = 1/sqrt(4)
+sqrt1_5 = 1/sqrt(5)
+sqrt1_6 = 1/sqrt(6)
+sqrt1_7 = 1/sqrt(7)
+sqrt1_8 = 1/sqrt(8)
+sqrt1_9 = 1/sqrt(9)
 
 zero = a = _c(1,0)
 one = b = _c(0,1)
@@ -362,7 +367,7 @@ test('_cmp2(_mul2(tensor2(zero), compute_rotateX_matrix(math.pi*2)), ((-1+0j), -
 test('_cmp2(_mul2(tensor2(zero), compute_rotateX_matrix(math.pi*4)), ((1+0j), 2.4492935982947064e-16j))')
 
 def str_tensor(z):
-	size = math.log2(len(z))
+	size = int(math.log2(len(z)))
 	f = "{0:f}|{1:0" + str(int(size)) + "b}>"
 	total = sum( sqrt(zi.real**2 + zi.imag**2) for zi in z )
 
@@ -433,6 +438,31 @@ def format_number_pretty(n):
 			return '1/√4'
 		else:
 			return '-1/√4'
+	elif abs(n - sqrt1_5) < 0.0000000001:
+		if n > 0:
+			return '1/√5'
+		else:
+			return '-1/√5'
+	elif abs(n - sqrt1_6) < 0.0000000001:
+		if n > 0:
+			return '1/√6'
+		else:
+			return '-1/√6'
+	elif abs(n - sqrt1_7) < 0.0000000001:
+		if n > 0:
+			return '1/√7'
+		else:
+			return '-1/√7'
+	elif abs(n - sqrt1_8) < 0.0000000001:
+		if n > 0:
+			return '1/√8'
+		else:
+			return '-1/√8'
+	elif abs(n - sqrt1_9) < 0.0000000001:
+		if n > 0:
+			return '1/√9'
+		else:
+			return '-1/√9'
 	else:
 		return '{0:f}'.format(n)
 
@@ -480,7 +510,7 @@ def str_tensor_pretty(z):
 	return ' + '.join(states)
 
 def measure_tensor(t):
-	size = int(sqrt(len(t._t)))
+	size = int(math.log2(len(t._t)))
 	amps = [ abs(a.real**2 + a.imag**2) for a in t._t ]
 	total = sum(amps)
 	p = random.random() * total
@@ -521,6 +551,8 @@ class Tensor(object):
 		return int(math.log2(len(self._t)))
 	def measure(self):
 		return measure_tensor(self)
+	def partial_measure(self, bit_index):
+		return partial_measure_tensor(self, bit_index)
 
 
 class MultiTensor(object):
@@ -546,6 +578,10 @@ class MultiTensor(object):
 			raise Exception('invalid other:' + str(other))
 	def size(self):
 		return self._t[0].size()
+	def measure(self):
+		return MultiTensor(*[ t.measure() for t in self._t ])
+	def partial_measure(self, bit_index):
+		return MultiTensor(*[ t.partial_measure(bit_index) for t in self._t ])
 
 
 class PartialMeasurementMultiTensor(MultiTensor):
@@ -570,6 +606,21 @@ class PartialMeasurementMultiTensor(MultiTensor):
 			raise Exception('invalid other:' + str(other))
 	def size(self):
 		return self._t[0].size()
+	def measure(self):
+		total = sum(self._p)
+		p = random.random() * total
+
+		# print("total:", total)
+		for i in range(len(self._p)):
+			if self._p[i] > p:
+				return self._t[i].measure()
+			else:
+				p -= self._p[i]
+		print("[MEASUREMENT-ERROR]:", t)
+		return "[MEASUREMENT-ERROR]"
+	def partial_measure(self, bit_index):
+		print('partial_measure', bit_index, ':', [ str(t) for t in self._t ], '->', [ str(t.partial_measure(bit_index)) for t in self._t ])
+		return PartialMeasurementMultiTensor(*[ t.partial_measure(bit_index) for t in self._t ], probability=self._p)
 
 
 def gate_from_string(s):
@@ -1286,6 +1337,57 @@ def compile_instructions_block_matrix2(gatesize, *insts):
 		op_matrix *= m
 	return op_matrix
 
+def compile_command_instruction(inst, current_gatesize):
+	if inst.startswith('gatesize '):
+		return int(inst[len('gatesize '):]), lambda s: s
+	elif inst.startswith('state '):
+		fixed_tensor = Tensor(inst[len('state '):])
+		return fixed_tensor.size(), lambda s: fixed_tensor
+	elif inst.startswith('multistate '):
+		fixed_tensor = MultiTensor.from_pattern(int(inst[len('multistate '):]))
+		return fixed_tensor.size(), lambda s: fixed_tensor
+	elif inst.startswith('measure'):
+		return current_gatesize, lambda s: s.measure()
+	elif inst.startswith('partial_measure '):
+		gateindex = int(inst[len('partial_measure '):])
+		return current_gatesize, lambda s: s.partial_measure(gateindex)
+	else:
+		raise Exception('invalid instruction:' + str(inst))
+
+
+def compile_instructions3_to_fun(*insts):
+	# print("compiling fun: {}".format(insts))
+
+	insts = flatten([ filter(lambda s: s != '' and not s.startswith('#'), map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	print(insts)
+	execution = []
+	rolling_insts = []
+	current_gatesize = 0
+	for inst in insts:
+		if inst.startswith('gatesize ') or inst.startswith('state ') or inst.startswith('multistate ') or inst.startswith('measure') or inst.startswith('partial_measure '):
+			if len(rolling_insts) > 0:
+				matrix = compile_instructions_block_matrix2(current_gatesize, '\n'.join(rolling_insts))
+				execution.append(lambda s: s * matrix)
+				rolling_insts = []
+			current_gatesize, compiled = compile_command_instruction(inst, current_gatesize)
+			execution.append(compiled)
+		else:
+			rolling_insts.append(inst)
+
+	if len(rolling_insts) > 0:
+		matrix = compile_instructions_block_matrix2(current_gatesize, '\n'.join(rolling_insts))
+		execution.append(lambda s: s * matrix)
+		rolling_insts = []
+
+	# print("compiled fun:\n" + compile_instructions_str(current_gatesize, *insts))
+
+	def executable(s=None):
+		for f in execution:
+			s = f(s)
+		return s
+	return executable
+
+
 def parse_instruction_to_str(inst, gatesize):
 	single_gate_matrices = {
 		'not': 'X',
@@ -1294,6 +1396,8 @@ def parse_instruction_to_str(inst, gatesize):
 		'tdagger': 't',
 		'zgate': 'Z',
 		'sgate': 'S',
+
+		'partial_measure': '%',
 	}
 	rotate_gate_builders = {
 		'rx': 'rX',
@@ -1307,9 +1411,15 @@ def parse_instruction_to_str(inst, gatesize):
 		'ccnot': 'ooX',
 		'cswap': 'oxx',
 	}
+	all_gate_commands = {
+		'measure': '%|',
+		'state': '_ ',
+		'multistate': '01',
+		'gatesize': '- ',
+	}
 
 	inst = inst.lower()
-	(inst_type, position) = inst.split(' ', 1)
+	(inst_type, position) = inst.split(' ', 1) if ' ' in inst else (inst, None)
 	base_str = [ '-' if i % 2 == 0 else ' ' for i in range(gatesize * 2) ]
 	if inst_type in single_gate_matrices:
 		position = int(position)
@@ -1338,13 +1448,42 @@ def parse_instruction_to_str(inst, gatesize):
 		base_str[2 * position_a] = three_gate_matrices[inst_type][0]
 		base_str[2 * position_b] = three_gate_matrices[inst_type][1]
 		base_str[2 * position_c] = three_gate_matrices[inst_type][2]
+	elif inst_type in all_gate_commands:
+		for i in range(len(base_str)-1):
+			if i % 2 == 0:
+				if inst_type == 'state':
+					base_str[i] = position[1+int(i/2)]
+				else:
+					base_str[i] = all_gate_commands[inst_type][0]
+			else:
+				base_str[i] = all_gate_commands[inst_type][1]
 	else:
 		raise Exception('invalid instruction:' + str(inst))
 	return ''.join(base_str)
 
 def compile_instructions_str(gatesize, *insts):
 	# print("compiling fun: {}".format(insts))
-	insts = flatten([ filter(lambda s: s != '', map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	insts = flatten([ filter(lambda s: s != '' and not s.startswith('#'), map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	strs = [ parse_instruction_to_str(i, gatesize) if type(i) is str else i for i in insts ]
+	lines = [ ['[]-'] + ['-'] * (len(strs) * 2) + ['-[]'] if i % 2 == 0 else ['   '] + [' '] * (len(strs) * 2) + ['   '] for i in range(gatesize * 2) ]
+	for si in range(len(strs)):
+		for i in range(len(lines)):
+			lines[i][si*2+1] = strs[si][i]
+	return '\n'.join( ''.join(l) for l in lines )
+
+def compile_instructions_str2(*insts):
+	# print("compiling fun: {}".format(insts))
+	insts = flatten([ filter(lambda s: s != '' and not s.startswith('#'), map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+
+	gatesize = 0
+	for inst in insts:
+		if inst.startswith('state '):
+			gatesize = Tensor(inst[len('state '):]).size()
+		elif inst.startswith('multistate '):
+			gatesize = int(inst[len('multistate '):])
+		elif inst.startswith('gatesize '):
+			gatesize = int(inst[len('gatesize '):])
+
 	strs = [ parse_instruction_to_str(i, gatesize) if type(i) is str else i for i in insts ]
 	lines = [ ['[]-'] + ['-'] * (len(strs) * 2) + ['-[]'] if i % 2 == 0 else ['   '] + [' '] * (len(strs) * 2) + ['   '] for i in range(gatesize * 2) ]
 	for si in range(len(strs)):
@@ -1454,10 +1593,11 @@ for i in range(10):
 
 
 def partial_measure_tensor(t, bit_index):
-	size = int(sqrt(len(t._t)))
+	size = int(math.log2(len(t._t)))
 	amps = [ abs(a.real**2 + a.imag**2) for a in t._t ]
 
-	n = 1
+	# n = 1
+	n = bit_index + 1
 	n2 = 2**n
 	hn2 = n2 / 2
 	bitmap = [ i % (n2) >= hn2 for i in range(len(amps)) ]
@@ -1465,7 +1605,7 @@ def partial_measure_tensor(t, bit_index):
 	chance1 = sum( amps[i] for i in range(len(amps)) if bitmap[i] )
 
 	total = chance0 + chance1
-	p = random.random() * total
+	# p = random.random() * total
 
 	if chance0 != 0 and chance1 != 0:
 		return PartialMeasurementMultiTensor(
@@ -1509,3 +1649,23 @@ for t in MultiTensor.from_pattern(3)._t:
 # for i in range(len(tensors)):
 # 	print(i % (n2) >= hn2)
 
+
+print(compile_instructions3_to_fun('''
+state |000>
+hadamard 0
+hadamard 1
+partial_measure 0
+partial_measure 1
+''')())
+
+test('compile_instructions3_to_fun("""state |010>\n hadamard 0""")() == "|01+>"')
+test('str(compile_instructions3_to_fun("""state |010>\n hadamard 0\n measure""")()) in ["|010>", "|011>"]')
+test('compile_instructions3_to_fun("""multistate 3\n hadamard 0""")() == "|00+>,|00->,|01+>,|01->,|10+>,|10->,|11+>,|11->"')
+test('compile_instructions3_to_fun("""state |010>\n hadamard 0\n cnot 0,2\n partial_measure 0\n measure""")() in ["|010>","|111>"]')
+test('compile_instructions3_to_fun("""state |000>\n hadamard 0\n cnot 0,2\n cnot 0,1\n partial_measure 0\n measure""")() in ["|000>","|111>"]')
+test('compile_instructions3_to_fun("""state |010>\n hadamard 0\n cnot 0,2\n partial_measure 0\n measure""")() not in ["|000>","|101>"]')
+test('compile_instructions3_to_fun("""state |00>\n hadamard 0\n hadamard 1\n partial_measure 0\n partial_measure 1""")() == "(50.0% : (50.0% : |00>), (50.0% : |10>)), (50.0% : (50.0% : |01>), (50.0% : |11>))"')
+test('compile_instructions3_to_fun("""state |000>\n hadamard 0\n hadamard 1\n partial_measure 0\n partial_measure 1""")() == "(50.0% : (50.0% : |000>), (50.0% : |010>)), (50.0% : (50.0% : |001>), (50.0% : |011>))"')
+
+
+print(compile_instructions3_to_fun('#swap 0,2')())
