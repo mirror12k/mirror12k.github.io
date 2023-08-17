@@ -814,6 +814,27 @@ def expando_matrix_times(m, times):
 		m = expando_matrix4(m)
 	return m
 
+def line_joiner(ls):
+	r = []
+	buf = ''
+	for l in ls:
+		if type(l) is str:
+			buf += l
+			if '[' not in buf or ']' in buf:
+				r.append(buf)
+				buf = ''
+		else:
+			if buf != '':
+				r.append(buf)
+				buf = ''
+			r.append(l)
+	if buf != '':
+		r.append(buf)
+	return r
+
+def line_splitter(lines):
+	return line_joiner(flatten([ filter(lambda s: s != '' and not s.startswith('#'), map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in lines ]))
+
 
 
 
@@ -942,7 +963,7 @@ def parse_instructions_block(insts):
 
 def compile_instructions_block_matrix(gatesize, *insts):
 	# print("compiling fun: {}".format(insts))
-	insts = flatten([ filter(lambda s: s != '', map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	insts = line_splitter(insts)
 	matrices = [ parse_instruction_to_matrix(i, gatesize) if type(i) is str else i for i in insts ]
 	op_matrix = MatrixGate(pad_gates("I", 1, gatesize - 1, gatesize))
 	for m in reversed(matrices):
@@ -1282,6 +1303,8 @@ print('CCNOT 0,2,3\n', '\n'.join([ '\t' + str(t) + ' -> ' + str(t * build_arbitr
 
 def parse_arguments(args):
 	return map(lambda s: int(s.strip()), args.split(','))
+def parse_arguments_complex(args):
+	return map(lambda s: complex(s.strip()), args.split(','))
 def parse_string_arguments(args):
 	return map(lambda s: s.strip(), args.split(','))
 
@@ -1325,12 +1348,31 @@ def parse_instruction_to_matrix2(inst, gatesize):
 		(position_a, position_b, position_c) = parse_arguments(position)
 		left_position = min(position_a, position_b, position_c)
 		return build_arbitrary_3gate_matrix(MatrixGate(three_gate_matrices[inst_type]), position_a, position_b, position_c).pad_to_size(left_position, gatesize)
+	elif inst_type == 'matrix':
+		(position, matrix_args) = position.split('[', 1)
+		position_args = tuple(parse_arguments(position))
+		matrix = tuple(parse_arguments_complex(matrix_args[:-1]))
+		# print('position_args:', position_args)
+		# print('matrix:', matrix)
+		if len(matrix) != 4 and len(matrix) != 16 and len(matrix) != 64:
+			raise Exception('unsupported matrix size (only 4,16,64 are supported for 1/2/3 gate operations):' + str(inst))
+		elif (len(matrix) == 4 and len(position_args) != 1) or (len(matrix) == 16 and len(position_args) != 2) or (len(matrix) == 64 and len(position_args) != 3):
+			raise Exception('unsupported arguments count (only 4,16,64 are supported for 1/2/3 gate operations):' + str(inst))
+
+		matrix = MatrixGate(_m2(*matrix))
+		left_position = min(position_args)
+		if matrix.size() == 1:
+			return matrix.pad_to_size(left_position, gatesize)
+		elif matrix.size() == 2:
+			return build_arbitrary_2gate_matrix(matrix, position_args[0], position_args[1]).pad_to_size(left_position, gatesize)
+		else:
+			return build_arbitrary_3gate_matrix(matrix, position_args[0], position_args[1], position_args[2]).pad_to_size(left_position, gatesize)
 	else:
 		raise Exception('invalid instruction:' + str(inst))
 
 def compile_instructions_block_matrix2(gatesize, *insts):
 	# print("compiling fun: {}".format(insts))
-	insts = flatten([ filter(lambda s: s != '', map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	insts = line_splitter(insts)
 	matrices = [ parse_instruction_to_matrix2(i, gatesize) if type(i) is str else i for i in insts ]
 	op_matrix = MatrixGate(pad_gates("I", 1, gatesize - 1, gatesize))
 	for m in reversed(matrices):
@@ -1358,8 +1400,8 @@ def compile_command_instruction(inst, current_gatesize):
 def compile_instructions3_to_fun(*insts):
 	# print("compiling fun: {}".format(insts))
 
-	insts = flatten([ filter(lambda s: s != '' and not s.startswith('#'), map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
-	print(insts)
+	insts = line_splitter(insts)
+	# print(insts)
 	execution = []
 	rolling_insts = []
 	current_gatesize = 0
@@ -1463,7 +1505,7 @@ def parse_instruction_to_str(inst, gatesize):
 
 def compile_instructions_str(gatesize, *insts):
 	# print("compiling fun: {}".format(insts))
-	insts = flatten([ filter(lambda s: s != '' and not s.startswith('#'), map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	insts = line_splitter(insts)
 	strs = [ parse_instruction_to_str(i, gatesize) if type(i) is str else i for i in insts ]
 	lines = [ ['[]-'] + ['-'] * (len(strs) * 2) + ['-[]'] if i % 2 == 0 else ['   '] + [' '] * (len(strs) * 2) + ['   '] for i in range(gatesize * 2) ]
 	for si in range(len(strs)):
@@ -1473,7 +1515,7 @@ def compile_instructions_str(gatesize, *insts):
 
 def compile_instructions_str2(*insts):
 	# print("compiling fun: {}".format(insts))
-	insts = flatten([ filter(lambda s: s != '' and not s.startswith('#'), map(lambda s: s.strip(), i.split('\n'))) if type(i) is str else [ i ] for i in insts ])
+	insts = line_splitter(insts)
 
 	gatesize = 0
 	for inst in insts:
@@ -1668,4 +1710,17 @@ test('compile_instructions3_to_fun("""state |00>\n hadamard 0\n hadamard 1\n par
 test('compile_instructions3_to_fun("""state |000>\n hadamard 0\n hadamard 1\n partial_measure 0\n partial_measure 1""")() == "(50.0% : (50.0% : |000>), (50.0% : |010>)), (50.0% : (50.0% : |001>), (50.0% : |011>))"')
 
 
-print(compile_instructions3_to_fun('#swap 0,2')())
+test('compile_instructions3_to_fun("#swap 0,2")() == None')
+
+
+print(compile_instructions3_to_fun("""
+multistate 2
+matrix 0 [
+	0,1,
+	1,0]
+matrix 1,0 [
+	1,0,0,0,
+	0,1,0,0,
+	0,0,0,1,
+	0,0,1,0]
+""")())
