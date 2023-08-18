@@ -50,6 +50,31 @@ ccnot 0,1,3
 # rotate gates require an angle parameter as the second argument:
 rx 0, 90
 
+# custom gates can be done with matrix:
+
+# this matrix would be the same as a NOT gate on qubit 0:
+# matrix 0 [
+#     0,1,
+#     1,0]
+
+# this 2-gate matrix would be the same as a cnot 0,1:
+# matrix 0,1 [
+#     1,0,0,0,
+#     0,1,0,0,
+#     0,0,0,1,
+#     0,0,1,0]
+
+# 3-gate matrix are also supported:
+# matrix 0,1,3 [
+#     1,0,0,0,0,0,0,0,
+#     0,1,0,0,0,0,0,0,
+#     0,0,1,0,0,0,0,0,
+#     0,0,0,1,0,0,0,0,
+#     0,0,0,0,1,0,0,0,
+#     0,0,0,0,0,0,1,0,
+#     0,0,0,0,0,1,0,0,
+#     0,0,0,0,0,0,0,1]
+
 # by default, the output is the full tensor state
 # by using the measure command, you collapse to a random possible state:
 # measure

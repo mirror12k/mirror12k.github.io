@@ -1470,9 +1470,7 @@ def parse_instruction_to_str(inst, gatesize):
 		(position, angle) = parse_string_arguments(position)
 		position = int(position)
 		base_str[2 * position] = rotate_gate_builders[inst_type]
-		print(base_str)
 		base_str[2 * position+1] = str(int(float(angle)))
-		print(base_str)
 	elif inst_type in two_gate_matrices:
 		(position_a, position_b) = parse_arguments(position)
 		min_position = min(position_a, position_b)
@@ -1499,6 +1497,15 @@ def parse_instruction_to_str(inst, gatesize):
 					base_str[i] = all_gate_commands[inst_type][0]
 			else:
 				base_str[i] = all_gate_commands[inst_type][1]
+	elif inst_type == 'matrix':
+		(position, matrix_args) = position.split('[', 1)
+		position_args = tuple(parse_arguments(position))
+		min_position = min(position_args)
+		max_position = max(position_args)
+		for i in range(min_position * 2,max_position*2):
+			base_str[i] = '|'
+		for i in range(len(position_args)):
+			base_str[2 * position_args[i]] = '$'
 	else:
 		raise Exception('invalid instruction:' + str(inst))
 	return ''.join(base_str)
