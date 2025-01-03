@@ -6,19 +6,13 @@
 
         <title>PyScript Quantum Calculator</title>
 
-        <link
-            rel="stylesheet"
-            href="https://pyscript.net/latest/pyscript.css"
-        />
-        <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+        <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css" />
+        <script defer type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
     </head>
 
     <body>
         <nav class="navbar" style="background-color: #000000">
             <div class="app-header">
-                <a href="/">
-                    <img src="./logo.png" class="logo" />
-                </a>
                 <a class="title" href="" style="color: #f0ab3c">Quantum Calculator</a>
             </div>
         </nav>
@@ -83,7 +77,7 @@ rx 0, 90
 # partial_measure 1
 </textarea>
             <div style="width: 100% min-height: 200px"><pre id="circuit-diagram" class="py-input" type="text" style="width: 100% min-height: 200px"></pre></div>
-            <button id="run-btn" class="py-button" type="submit" py-click="run_quantum()">
+            <button id="run-btn" class="py-button" type="submit" py-click="run_quantum">
                 Run Quantum
             </button>
         </div>

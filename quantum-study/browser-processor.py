@@ -1,12 +1,12 @@
 
-from quantum import *
+# from quantum import *
+from pyscript import document
 
-run_content = Element("run-content")
-circuit_diagram = Element("circuit-diagram")
-
+run_content = document.querySelector("#run-content")
+circuit_diagram = document.querySelector("#circuit-diagram")
 
 def run_quantum(*args, **kws):
-	prog = run_content.element.value
+	prog = run_content.value
 
 	print("##################################################")
 	# fun = parse_instructions_block(prog)
@@ -14,7 +14,7 @@ def run_quantum(*args, **kws):
 	f = compile_instructions3_to_fun(prog)
 	# s = compile_instructions_str(4, prog)
 	s = compile_instructions_str2(prog)
-	circuit_diagram.element.innerText = s
+	circuit_diagram.innerText = s
 	print(s)
 	# for t in MultiTensor.from_pattern(4)._t:
 	# 	print(t, '->', t * m)
