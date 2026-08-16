@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Quantum Harmonic Oscillator — Weight on a Spring</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --surface-1:      #1a1a19;
+    --page-plane:     #0d0d0d;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --gridline:       #2c2c2a;
+    --baseline:       #383835;
+    --border:         rgba(255,255,255,0.10);
+    --series-blue:    #3987e5;   /* selected energy level / wavefunction */
+    --series-orange:  #d95926;   /* â-dagger (raise) */
+    --series-aqua:    #199e70;   /* â (lower) */
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--page-plane);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    padding: 24px;
+    line-height: 1.45;
+  }
+
+  h1 { font-size: 20px; margin: 0 0 14px; }
+  .subtitle { color: var(--text-secondary); font-size: 14px; margin: 0 0 18px; max-width: 900px; }
+
+  .tabs { display: flex; gap: 8px; margin-bottom: 18px; border-bottom: 1px solid var(--border); }
+  .tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    padding: 10px 16px;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+  }
+  .tab-btn:hover { color: var(--text-primary); }
+  .tab-btn.active { color: var(--text-primary); border-bottom-color: var(--series-blue); }
+
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  .layout {
+    display: grid;
+    grid-template-columns: auto auto auto;
+    justify-items: start;
+    align-items: start;
+    gap: 20px;
+  }
+  @media (max-width: 1300px) {
+    .layout { grid-template-columns: auto auto; }
+  }
+  @media (max-width: 950px) {
+    .layout { grid-template-columns: auto; }
+  }
+
+  .panel {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  .panel h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+    margin: 0 0 10px;
+    font-weight: 600;
+  }
+
+  canvas { display: block; border-radius: 6px; background: var(--surface-1); touch-action: none; }
+
+  .controls {
+    min-width: 300px;
+    max-width: 340px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .row { display: flex; align-items: center; gap: 10px; }
+  .row.between { justify-content: space-between; }
+
+  label.field-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  input[type="range"] {
+    width: 100%;
+    accent-color: var(--series-blue);
+  }
+
+  .stat-line {
+    font-size: 13px;
+    color: var(--text-secondary);
+    display: flex;
+    justify-content: space-between;
+    font-variant-numeric: tabular-nums;
+  }
+  .stat-line b { color: var(--text-primary); font-weight: 600; }
+
+  .btn {
+    flex: 1;
+    background: var(--gridline);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 8px;
+    padding: 10px 8px;
+    font-size: 14px;
+    cursor: pointer;
+    text-align: center;
+    transition: transform 0.08s ease, background 0.15s ease;
+  }
+  .btn:hover { background: #333331; }
+  .btn:active { transform: scale(0.96); }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn.raise { border-color: color-mix(in srgb, var(--series-orange) 55%, var(--border)); }
+  .btn.lower { border-color: color-mix(in srgb, var(--series-aqua) 55%, var(--border)); }
+  .btn.flash-raise { background: color-mix(in srgb, var(--series-orange) 35%, var(--gridline)); }
+  .btn.flash-lower { background: color-mix(in srgb, var(--series-aqua) 35%, var(--gridline)); }
+
+  .btn.ghost {
+    background: transparent;
+  }
+
+  .ladder-box {
+    background: var(--page-plane);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+  .ladder-box .eq { color: var(--text-primary); font-variant-numeric: tabular-nums; }
+
+  .mode-toggle {
+    display: flex;
+    gap: 6px;
+    background: var(--page-plane);
+    border-radius: 8px;
+    padding: 4px;
+  }
+  .mode-toggle label {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    padding: 7px 4px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: var(--text-secondary);
+  }
+  .mode-toggle input { display: none; }
+  .mode-toggle input:checked + span { color: var(--text-primary); }
+  .mode-toggle label:has(input:checked) { background: var(--gridline); }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: 12px; color: var(--text-secondary); }
+  .legend .item { display: flex; align-items: center; gap: 6px; }
+  .swatch { width: 12px; height: 12px; border-radius: 2px; flex: none; }
+
+  .hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 8px;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 10px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    opacity: 0;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+
+<h1>Quantum Harmonic Oscillator Demos</h1>
+
+<div class="tabs">
+  <button class="tab-btn active" data-tab="single" type="button">Single Oscillator</button>
+  <button class="tab-btn" data-tab="chain" type="button">Coupled Chain (Phonons)</button>
+</div>
+
+<section id="tab-single" class="tab-page active">
+<p class="subtitle">
+  The left panel is a classical stand-in: a mass on a spring with the same total energy as level
+  n, oscillating between the turning points ±A<sub>n</sub>. It is <em>not</em> the quantum state
+  itself — a true energy eigenstate |n⟩ is stationary (|ψ<sub>n</sub>(x)|² is constant in time); the
+  moving dot only shows where a classical particle of that same energy would be, for comparison.
+  The right panel is the energy-level diagram: the parabola is V(x)=½x², the dashed rails are the
+  quantized energies E<sub>n</sub>=(n+½)ħω, and the highlighted curve is ψ<sub>n</sub>(x) =
+  H<sub>n</sub>(x)·e<sup>−x²/2</sup> (normalized), riding on the E<sub>n</sub> rail it belongs to.
+  Step levels exactly with the ladder operators â / â<sup>†</sup>, or drag the weight and let go —
+  that models an energy <em>measurement</em> on the coherent state the pull creates, with the panel
+  below showing the actual (Born-rule) probability of landing on each n.
+</p>
+
+<div class="layout">
+
+  <div class="panel">
+    <h2>Spring &amp; mass (classical view)</h2>
+    <canvas id="panelB" width="320" height="520"></canvas>
+    <p class="hint">Click and drag the weight, then release. This is not a real relaxation
+      process — it simulates measuring the energy of the coherent state your pull creates, with the
+      outcome n drawn at random from the probabilities shown under the diagram.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Energy levels &amp; wavefunction ψₙ(x)</h2>
+    <canvas id="panelA" width="560" height="460"></canvas>
+    <div class="legend">
+      <div class="item"><span class="swatch" style="background:var(--baseline)"></span>V(x) = ½x² potential</div>
+      <div class="item"><span class="swatch" style="background:var(--text-muted)"></span>allowed energies Eₙ</div>
+      <div class="item"><span class="swatch" style="background:var(--series-blue)"></span>selected ψₙ(x) / |ψₙ(x)|²</div>
+      <div class="item"><span class="swatch" style="background:var(--series-orange)"></span>mass position (riding Eₙ)</div>
+    </div>
+  </div>
+
+  <div class="panel controls">
+    <h2>Controls</h2>
+
+    <div>
+      <label class="field-label">Energy level n = <b id="nLabel">0</b></label>
+      <input type="range" id="nSlider" min="0" max="9" step="1" value="0">
+    </div>
+
+    <div class="stat-line"><span>Energy Eₙ = (n + ½) ħω</span><b id="eLabel">0.500</b></div>
+    <div class="stat-line"><span>Classical turning point Aₙ = √(2n+1)</span><b id="aLabel">1.000</b></div>
+    <div class="stat-line"><span>Current position x(t)</span><b id="xLabel">0.000</b></div>
+
+    <div class="row">
+      <button class="btn lower" id="btnLower">↓ â &nbsp;(lower)</button>
+      <button class="btn raise" id="btnRaise">↑ â<span style="vertical-align:super;font-size:10px">†</span> &nbsp;(raise)</button>
+    </div>
+
+    <div class="ladder-box" id="ladderText"></div>
+
+    <div>
+      <label class="field-label">Right-panel curve shows</label>
+      <div class="mode-toggle">
+        <label><input type="radio" name="mode" value="H"><span>Hₙ(x)</span></label>
+        <label><input type="radio" name="mode" value="psi" checked><span>ψₙ(x)</span></label>
+        <label><input type="radio" name="mode" value="psi2"><span>|ψₙ(x)|²</span></label>
+      </div>
+      <p class="hint">
+        Hₙ(x) is the bare polynomial — unbounded, so it's deliberately left to run off the
+        chart outside the turning points (dotted lines). Multiplying it by the Gaussian
+        e<sup>−x²/2</sup> is what tames it into ψₙ(x), the actual normalizable wavefunction.
+        |ψₙ(x)|² is the position <em>probability density</em>.
+      </p>
+    </div>
+
+    <div class="row">
+      <button class="btn ghost" id="btnPlay">⏸ Pause</button>
+      <button class="btn ghost" id="btnReset">⟲ Reset</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="panel" style="margin-top:20px; max-width: 916px;">
+  <h2>Measurement outcome probabilities P(n) — Born rule on the pulled coherent state</h2>
+  <canvas id="panelC" width="880" height="150"></canvas>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:var(--series-blue)"></span>P(n) for the last pull</div>
+    <div class="item"><span class="swatch" style="background:var(--series-orange)"></span>actual measured outcome</div>
+    <div class="item"><span class="swatch" style="background:var(--series-aqua)"></span>mean n̄ = |α|² (classical-energy estimate)</div>
+  </div>
+  <p class="hint">
+    Releasing the mass at rest at displacement x₀ makes a coherent state |α⟩ with α = x₀/√2 — a
+    superposition of many n, <em>not</em> a single eigenstate. Its number distribution is Poissonian,
+    P(n) = e<sup>−|α|²</sup>|α|<sup>2n</sup>/n!. Free evolution would keep oscillating classically
+    forever without collapsing; only an actual energy measurement forces a single random outcome n,
+    with exactly these probabilities. That's why a small pull can still occasionally measure n=2 or
+    n=3 — it doesn't deterministically round to the "nearest" level.
+  </p>
+</div>
+</section>
+
+<section id="tab-chain" class="tab-page">
+<p class="subtitle">
+  N atoms in a ring, each linked to its two neighbors by identical springs (stiffness K), with
+  atom N linked back to atom 1 — periodic boundary conditions. In Fourier (normal-mode)
+  coordinates the Hamiltonian decouples into N independent oscillators, one per allowed
+  wavevector k:
+  Ĥ = Σ<sub>k</sub> [ (1/2m) p̂<sub>k</sub>p̂<sub>−k</sub> + ½ m ω<sub>k</sub>² x̂<sub>k</sub>x̂<sub>−k</sub> ],
+  &nbsp; ω<sub>k</sub>² = (4K/m) sin²(ka/2). Each of the N allowed k's is <em>exactly</em> the
+  single-oscillator problem from the first tab, just with its own ω<sub>k</sub> — and its own
+  independent occupation number n<sub>k</sub>. The full state is a product over every mode,
+  |n<sub>0</sub>, n<sub>1</sub>, …, n<sub>N−1</sub>⟩ — â<sub>k</sub> / â<sub>k</sub><sup>†</sup>
+  raise or lower only the one mode k you're currently inspecting, leaving every other mode's
+  occupation number untouched.
+</p>
+
+<div class="layout">
+
+  <div class="panel">
+    <h2>Atom chain (real space)</h2>
+    <canvas id="chainReal" width="420" height="340"></canvas>
+    <p class="hint">
+      Displacement is drawn transverse purely for visibility (the real motion is longitudinal,
+      along the chain). The dashed arc is the periodic link — atom N connects back to atom 1. The
+      dotted orange curve is the selected mode's own contribution in isolation; the atoms follow
+      the sum of <em>every</em> mode's contribution, since each keeps its own occupation number.
+    </p>
+    <h2 style="margin-top:14px;">State |n₀, n₁, …, n<sub>N−1</sub>⟩</h2>
+    <canvas id="chainOccupation" width="420" height="80"></canvas>
+    <p class="hint">One independent phonon number per mode — click a mode above, then use âₖ/âₖ<sup>†</sup> to change just that one.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Dispersion ω(k) &amp; this mode's levels</h2>
+    <canvas id="chainDispersion" width="440" height="190" style="cursor:pointer;"></canvas>
+    <p class="hint">Click any dot to jump to that mode — that's the other way to change k, besides the slider.</p>
+    <canvas id="chainLevels" width="440" height="220" style="margin-top:10px;"></canvas>
+    <p class="hint">
+      Levels are drawn in units of ħω<sub>k</sub> — every mode's ladder looks identical on this
+      normalized axis, but the real energy spacing still scales with ω<sub>k</sub> (read it off
+      the dispersion plot above).
+    </p>
+  </div>
+
+  <div class="panel controls">
+    <h2>Controls</h2>
+
+    <div>
+      <label class="field-label">Chain size N = <b id="chNLabel">10</b></label>
+      <input type="range" id="chNSlider" min="4" max="20" step="1" value="10">
+    </div>
+
+    <div>
+      <label class="field-label">Stiffness K/m = <b id="chStiffLabel">1.00</b></label>
+      <input type="range" id="chStiffSlider" min="0.2" max="4" step="0.1" value="1">
+    </div>
+
+    <div>
+      <label class="field-label">Mode index n (k = 2πn/N) = <b id="chModeLabel">0</b></label>
+      <input type="range" id="chModeSlider" min="0" max="9" step="1" value="2">
+    </div>
+
+    <div class="stat-line"><span>Wavevector k</span><b id="chKLabel">0.000</b></div>
+    <div class="stat-line"><span>ωₖ = √(4K/m)·|sin(k/2)|</span><b id="chOmegaLabel">0.000</b></div>
+    <div class="stat-line"><span>Phonon number nₖ</span><b id="chNkLabel">0</b></div>
+    <div class="stat-line"><span>Energy E = (nₖ+½)ħωₖ</span><b id="chELabel">0.000</b></div>
+
+    <div class="row">
+      <button class="btn lower" id="chBtnLower">↓ âₖ &nbsp;(lower)</button>
+      <button class="btn raise" id="chBtnRaise">↑ âₖ<span style="vertical-align:super;font-size:10px">†</span> &nbsp;(raise)</button>
+    </div>
+
+    <div class="ladder-box" id="chLadderText"></div>
+    <p class="hint" id="chZeroModeNote" style="color:var(--series-orange); opacity:0; transition:opacity .15s ease;">
+      k = 0 is the zero-frequency translation mode: the whole ring drifting rigidly. There is no
+      restoring force for it, so it is not a bound oscillator and has no discrete levels.
+    </p>
+
+    <div class="row">
+      <button class="btn ghost" id="chBtnPlay">⏸ Pause</button>
+      <button class="btn ghost" id="chBtnReset">⟲ Reset</button>
+    </div>
+  </div>
+
+</div>
+</section>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Palette ----------
+  const COLOR = {
+    surface: "#1a1a19",
+    ink: "#ffffff",
+    inkSecondary: "#c3c2b7",
+    muted: "#898781",
+    gridline: "#2c2c2a",
+    baseline: "#383835",
+    blue: "#3987e5",
+    orange: "#d95926",
+    aqua: "#199e70"
+  };
+
+  // ---------- Physics (natural units: m = 1, k = 1, hbar = omega = 1) ----------
+  const NMAX = 9;
+
+  const factCache = [1];
+  function factorial(n) {
+    for (let i = factCache.length; i <= n; i++) factCache[i] = factCache[i - 1] * i;
+    return factCache[n];
+  }
+
+  function hermite(n, x) {
+    if (n === 0) return 1;
+    if (n === 1) return 2 * x;
+    let Hnm2 = 1, Hnm1 = 2 * x, Hn = 0;
+    for (let k = 2; k <= n; k++) {
+      Hn = 2 * x * Hnm1 - 2 * (k - 1) * Hnm2;
+      Hnm2 = Hnm1;
+      Hnm1 = Hn;
+    }
+    return Hn;
+  }
+
+  function psi(n, x) {
+    const coeff = 1 / Math.sqrt(Math.pow(2, n) * factorial(n) * Math.sqrt(Math.PI));
+    return coeff * hermite(n, x) * Math.exp(-x * x / 2);
+  }
+
+  const energyOf = (n) => n + 0.5;
+  const amplitudeOf = (n) => Math.sqrt(2 * n + 1);
+
+  const XMAX = amplitudeOf(NMAX) + 0.8;
+  const ETOP = Math.max(energyOf(NMAX) + 1.3, (XMAX * XMAX) / 2 + 0.3);
+
+  // Coherent-state number distribution from the last pull-and-release, truncated to n=0..NMAX.
+  // P(n) = e^(-|a|^2) |a|^(2n) / n!  for a coherent state |a> with a = x0/sqrt(2).
+  function coherentDistribution(alpha) {
+    const a2 = alpha * alpha;
+    const raw = [];
+    for (let k = 0; k <= NMAX; k++) raw.push(Math.exp(-a2) * Math.pow(a2, k) / factorial(k));
+    const norm = raw.reduce((s, v) => s + v, 0) || 1;
+    return { dist: raw.map((v) => v / norm), mean: a2 };
+  }
+
+  let lastDist = coherentDistribution(0).dist;
+  let lastMeanN = 0;
+  let lastOutcomeN = 0;
+
+  // ---------- State ----------
+  const state = {
+    n: 0,
+    A: amplitudeOf(0),
+    Astart: amplitudeOf(0),
+    Aend: amplitudeOf(0),
+    tweenT: 1,
+    tweenDur: 0.55,
+    theta: Math.PI / 2, // start moving through equilibrium
+    omegaDisplay: 1.5,
+    running: true,
+    dragging: false,
+    dragX: 0,
+    previewMean: 0,
+    mode: "psi",
+    lastTime: null
+  };
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+
+  function currentActualA() {
+    if (state.tweenT >= 1) return state.Aend;
+    return lerp(state.Astart, state.Aend, easeOutCubic(state.tweenT));
+  }
+
+  // ---------- DOM ----------
+  const canvasB = document.getElementById("panelB");
+  const ctxB = canvasB.getContext("2d");
+  const canvasA = document.getElementById("panelA");
+  const ctxA = canvasA.getContext("2d");
+  const canvasC = document.getElementById("panelC");
+  const ctxC = canvasC.getContext("2d");
+
+  const nSlider = document.getElementById("nSlider");
+  const nLabel = document.getElementById("nLabel");
+  const eLabel = document.getElementById("eLabel");
+  const aLabel = document.getElementById("aLabel");
+  const xLabel = document.getElementById("xLabel");
+  const ladderText = document.getElementById("ladderText");
+  const btnLower = document.getElementById("btnLower");
+  const btnRaise = document.getElementById("btnRaise");
+  const btnPlay = document.getElementById("btnPlay");
+  const btnReset = document.getElementById("btnReset");
+  const toast = document.getElementById("toast");
+
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add("show");
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove("show"), 1600);
+  }
+
+  function updateLadderText(n) {
+    const lowerHtml = n === 0
+      ? `â|0⟩ = 0 <span style="color:var(--text-muted)">(vacuum state — cannot lower further)</span>`
+      : `â|${n}⟩ = √${n} |${n - 1}⟩ = <span class="eq">${Math.sqrt(n).toFixed(3)}</span> |${n - 1}⟩`;
+    const raiseHtml = n === NMAX
+      ? `â<sup>†</sup>|${n}⟩ = √${n + 1} |${n + 1}⟩ <span style="color:var(--text-muted)">(display capped at n=${NMAX})</span>`
+      : `â<sup>†</sup>|${n}⟩ = √${n + 1} |${n + 1}⟩ = <span class="eq">${Math.sqrt(n + 1).toFixed(3)}</span> |${n + 1}⟩`;
+    ladderText.innerHTML = lowerHtml + "<br>" + raiseHtml;
+  }
+
+  function updateInfoLabels(n, xCurrent) {
+    nLabel.textContent = n;
+    eLabel.textContent = energyOf(n).toFixed(3);
+    aLabel.textContent = amplitudeOf(n).toFixed(3);
+    xLabel.textContent = xCurrent.toFixed(3);
+    nSlider.value = n;
+    btnLower.disabled = n === 0;
+    btnRaise.disabled = n === NMAX;
+  }
+
+  function setN(newN, opts) {
+    newN = Math.max(0, Math.min(NMAX, newN));
+    state.Astart = currentActualA();
+    state.Aend = amplitudeOf(newN);
+    state.tweenT = 0;
+    state.n = newN;
+    updateLadderText(newN);
+    if (opts && opts.silent) return;
+  }
+
+  // ---------- Panel B: spring + mass ----------
+  const Bw = canvasB.width, Bh = canvasB.height;
+  const anchorX = Bw / 2;
+  const anchorY = 26;
+  const massRadius = 24;
+  const bottomMargin = 30;
+  const minSpring = 22;
+  const equilibriumY = (anchorY + (Bh - bottomMargin)) / 2;
+  const availDown = (Bh - bottomMargin) - equilibriumY;
+  const availUp = equilibriumY - anchorY - massRadius - minSpring;
+  const pxPerUnitB = Math.min(availDown, availUp) / XMAX;
+
+  function drawSpring(ctx, x0, y0, x1, y1, coils) {
+    const dx = x1 - x0, dy = y1 - y0;
+    const len = Math.hypot(dx, dy);
+    const ux = dx / len, uy = dy / len;
+    const px = -uy, py = ux; // perpendicular
+    const amp = 10;
+    const segs = coils * 2;
+    ctx.beginPath();
+    ctx.moveTo(x0, y0);
+    for (let i = 1; i < segs; i++) {
+      const t = i / segs;
+      const side = i % 2 === 0 ? 1 : -1;
+      const bx = x0 + dx * t + px * amp * side;
+      const by = y0 + dy * t + py * amp * side;
+      ctx.lineTo(bx, by);
+    }
+    ctx.lineTo(x1, y1);
+    ctx.stroke();
+  }
+
+  function drawPanelB(xCurrent, previewActive, previewMean) {
+    ctxB.clearRect(0, 0, Bw, Bh);
+
+    // equilibrium guide
+    ctxB.save();
+    ctxB.strokeStyle = COLOR.baseline;
+    ctxB.setLineDash([5, 5]);
+    ctxB.lineWidth = 1;
+    ctxB.beginPath();
+    ctxB.moveTo(30, equilibriumY);
+    ctxB.lineTo(Bw - 30, equilibriumY);
+    ctxB.stroke();
+    ctxB.restore();
+    ctxB.fillStyle = COLOR.muted;
+    ctxB.font = "11px system-ui, sans-serif";
+    ctxB.fillText("equilibrium (x = 0)", 34, equilibriumY - 6);
+
+    // Energy-level ticks: mark the actual turning point +-A_k of each quantized level k,
+    // NOT a plain linear x-ruler — the turning points are spaced by sqrt(2k+1), not by k.
+    ctxB.font = "10px system-ui, sans-serif";
+    let lastLabelY = -Infinity;
+    for (let k = 0; k <= NMAX; k++) {
+      const Ak = amplitudeOf(k);
+      const isSelected = k === state.n;
+      [1, -1].forEach((sign) => {
+        const ty = equilibriumY + sign * Ak * pxPerUnitB;
+        if (ty < anchorY + 4 || ty > Bh - bottomMargin - 4) return;
+        ctxB.beginPath();
+        ctxB.moveTo(Bw - 30, ty);
+        ctxB.lineTo(Bw - 20, ty);
+        ctxB.strokeStyle = isSelected ? COLOR.blue : COLOR.gridline;
+        ctxB.lineWidth = isSelected ? 2 : 1;
+        ctxB.stroke();
+        // Skip the text (keep the tick) when levels are packed too tight to read, e.g. high n.
+        if (sign === 1 && (isSelected || Math.abs(ty - lastLabelY) >= 10)) {
+          ctxB.fillStyle = isSelected ? COLOR.blue : COLOR.muted;
+          ctxB.fillText("n=" + k, Bw - 18, ty + 3);
+          lastLabelY = ty;
+        }
+      });
+    }
+
+    // live pull preview — shows the coherent-state MEAN, not a deterministic snap
+    if (previewActive) {
+      const nearest = Math.max(0, Math.min(NMAX, Math.round(previewMean)));
+      const guideY = equilibriumY + Math.sign(xCurrent || 1) * amplitudeOf(nearest) * pxPerUnitB;
+      ctxB.save();
+      ctxB.strokeStyle = COLOR.orange;
+      ctxB.setLineDash([4, 4]);
+      ctxB.globalAlpha = 0.7;
+      ctxB.beginPath();
+      ctxB.moveTo(20, guideY);
+      ctxB.lineTo(Bw - 20, guideY);
+      ctxB.stroke();
+      ctxB.restore();
+      ctxB.fillStyle = COLOR.orange;
+      ctxB.font = "12px system-ui, sans-serif";
+      ctxB.fillText(`mean n̄≈${previewMean.toFixed(2)} — release to measure`, 16, guideY - 8);
+    }
+
+    // anchor
+    ctxB.fillStyle = COLOR.inkSecondary;
+    ctxB.fillRect(anchorX - 40, anchorY - 8, 80, 8);
+    ctxB.fillStyle = COLOR.muted;
+
+    const massY = equilibriumY + xCurrent * pxPerUnitB;
+
+    // spring
+    ctxB.strokeStyle = COLOR.inkSecondary;
+    ctxB.lineWidth = 2;
+    drawSpring(ctxB, anchorX, anchorY, anchorX, massY - massRadius, 11);
+
+    // mass
+    const grad = ctxB.createRadialGradient(
+      anchorX - massRadius * 0.35, massY - massRadius * 0.35, 2,
+      anchorX, massY, massRadius
+    );
+    grad.addColorStop(0, "#6fa8ec");
+    grad.addColorStop(1, COLOR.blue);
+    ctxB.beginPath();
+    ctxB.arc(anchorX, massY, massRadius, 0, Math.PI * 2);
+    ctxB.fillStyle = grad;
+    ctxB.fill();
+    ctxB.lineWidth = state.dragging ? 3 : 1.5;
+    ctxB.strokeStyle = state.dragging ? COLOR.orange : COLOR.ink;
+    ctxB.stroke();
+
+    ctxB.fillStyle = COLOR.ink;
+    ctxB.font = "bold 12px system-ui, sans-serif";
+    ctxB.textAlign = "center";
+    ctxB.fillText("n=" + state.n, anchorX, massY + 4);
+    ctxB.textAlign = "left";
+  }
+
+  // ---------- Panel A: energy diagram ----------
+  const Aw = canvasA.width, Ah = canvasA.height;
+  const marginL = 46, marginR = 16, marginT = 16, marginB = 34;
+  const plotW = Aw - marginL - marginR;
+  const plotH = Ah - marginT - marginB;
+
+  function xToPx(x) { return marginL + ((x + XMAX) / (2 * XMAX)) * plotW; }
+  function eToPy(e) { return Ah - marginB - (e / ETOP) * plotH; }
+
+  function drawPanelA(xCurrent) {
+    ctxA.clearRect(0, 0, Aw, Ah);
+
+    // axes
+    ctxA.strokeStyle = COLOR.gridline;
+    ctxA.lineWidth = 1;
+    ctxA.beginPath();
+    ctxA.moveTo(marginL, marginT);
+    ctxA.lineTo(marginL, Ah - marginB);
+    ctxA.lineTo(Aw - marginR, Ah - marginB);
+    ctxA.stroke();
+
+    ctxA.fillStyle = COLOR.muted;
+    ctxA.font = "11px system-ui, sans-serif";
+    ctxA.fillText("E", marginL - 14, marginT + 4);
+    ctxA.fillText("x", Aw - marginR - 6, Ah - marginB + 16);
+
+    // x-axis ticks
+    for (let k = -Math.floor(XMAX); k <= Math.floor(XMAX); k++) {
+      const px = xToPx(k);
+      ctxA.strokeStyle = COLOR.gridline;
+      ctxA.beginPath();
+      ctxA.moveTo(px, Ah - marginB);
+      ctxA.lineTo(px, Ah - marginB + 4);
+      ctxA.stroke();
+      if (k % 2 === 0) ctxA.fillText(String(k), px - 3, Ah - marginB + 16);
+    }
+
+    // energy levels (dashed rails) + turning points
+    for (let lvl = 0; lvl <= NMAX; lvl++) {
+      const e = energyOf(lvl);
+      const py = eToPy(e);
+      const isSelected = lvl === state.n;
+      ctxA.save();
+      ctxA.setLineDash(isSelected ? [] : [5, 4]);
+      ctxA.strokeStyle = isSelected ? COLOR.blue : COLOR.muted;
+      ctxA.globalAlpha = isSelected ? 0.9 : 0.45;
+      ctxA.lineWidth = isSelected ? 2 : 1;
+      const A = amplitudeOf(lvl);
+      const xL = xToPx(-A), xR = xToPx(A);
+      ctxA.beginPath();
+      ctxA.moveTo(xL, py);
+      ctxA.lineTo(xR, py);
+      ctxA.stroke();
+      ctxA.restore();
+
+      ctxA.fillStyle = isSelected ? COLOR.blue : COLOR.muted;
+      ctxA.font = isSelected ? "bold 11px system-ui, sans-serif" : "10px system-ui, sans-serif";
+      ctxA.fillText("n=" + lvl, xR + 4, py + 3);
+    }
+
+    // potential parabola V(x) = x^2/2
+    ctxA.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const x = -XMAX + (2 * XMAX * i) / 200;
+      const e = (x * x) / 2;
+      const px = xToPx(x), py = eToPy(Math.min(e, ETOP));
+      if (i === 0) ctxA.moveTo(px, py); else ctxA.lineTo(px, py);
+    }
+    ctxA.strokeStyle = COLOR.baseline;
+    ctxA.lineWidth = 2;
+    ctxA.stroke();
+
+    // classical turning points for selected level
+    const An = amplitudeOf(state.n);
+    ctxA.save();
+    ctxA.setLineDash([3, 3]);
+    ctxA.strokeStyle = COLOR.muted;
+    ctxA.globalAlpha = 0.6;
+    [-An, An].forEach((xt) => {
+      const px = xToPx(xt);
+      ctxA.beginPath();
+      ctxA.moveTo(px, marginT);
+      ctxA.lineTo(px, Ah - marginB);
+      ctxA.stroke();
+    });
+    ctxA.restore();
+
+    // wavefunction / Hermite / density curve for selected n, riding baseline E_n
+    const baseE = energyOf(state.n);
+    const baseline = eToPy(baseE);
+    const N_SAMPLES = 260;
+    const samples = [];
+    let maxAbs = 1e-9;
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      let v;
+      if (state.mode === "H") {
+        // Bare polynomial, no Gaussian — unbounded on purpose, to show why the envelope is needed.
+        v = hermite(state.n, x);
+      } else if (state.mode === "psi2") {
+        v = psi(state.n, x) * psi(state.n, x);
+      } else {
+        v = psi(state.n, x);
+      }
+      samples.push(v);
+      // Scale Hn(x) to its own swing inside the classically-allowed band only, so it stays
+      // comparable in size to psi/psi^2 there, then is left to diverge outside on the plot.
+      const inBand = state.mode !== "H" || Math.abs(x) <= An;
+      if (inBand && Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+    }
+    const targetSpan = 0.42; // energy units of vertical room either side of the rail
+    const scale = targetSpan / maxAbs;
+
+    // filled area under curve (probability / amplitude ribbon)
+    ctxA.beginPath();
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      const py = eToPy(baseE + samples[i] * scale);
+      const px = xToPx(x);
+      if (i === 0) ctxA.moveTo(px, py); else ctxA.lineTo(px, py);
+    }
+    for (let i = N_SAMPLES; i >= 0; i--) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      ctxA.lineTo(xToPx(x), baseline);
+    }
+    ctxA.closePath();
+    ctxA.fillStyle = COLOR.blue;
+    ctxA.globalAlpha = 0.18;
+    ctxA.fill();
+    ctxA.globalAlpha = 1;
+
+    // stroke curve
+    ctxA.beginPath();
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      const py = eToPy(baseE + samples[i] * scale);
+      const px = xToPx(x);
+      if (i === 0) ctxA.moveTo(px, py); else ctxA.lineTo(px, py);
+    }
+    ctxA.strokeStyle = COLOR.blue;
+    ctxA.lineWidth = 2.2;
+    ctxA.stroke();
+
+    // moving marker: classical position riding the selected energy rail
+    const markerPx = xToPx(Math.max(-XMAX, Math.min(XMAX, xCurrent)));
+    ctxA.beginPath();
+    ctxA.arc(markerPx, baseline, 6, 0, Math.PI * 2);
+    ctxA.fillStyle = COLOR.orange;
+    ctxA.fill();
+    ctxA.lineWidth = 1.5;
+    ctxA.strokeStyle = COLOR.ink;
+    ctxA.stroke();
+  }
+
+  // ---------- Pointer interaction on Panel B ----------
+  function bPointerFromEvent(evt) {
+    const rect = canvasB.getBoundingClientRect();
+    const scaleX = Bw / rect.width, scaleY = Bh / rect.height;
+    return {
+      x: (evt.clientX - rect.left) * scaleX,
+      y: (evt.clientY - rect.top) * scaleY
+    };
+  }
+
+  function massScreenY() {
+    const x = state.dragging ? state.dragX : currentActualA() * Math.cos(state.theta);
+    return equilibriumY + x * pxPerUnitB;
+  }
+
+  // Mean phonon number of the coherent state produced by releasing from rest at displacement x:
+  // alpha = x/sqrt(2) (real, since zero momentum), mean n-bar = |alpha|^2 = x^2/2.
+  function previewMeanOf(x) { return (x * x) / 2; }
+
+  canvasB.addEventListener("pointerdown", (evt) => {
+    const p = bPointerFromEvent(evt);
+    const my = massScreenY();
+    const dist = Math.hypot(p.x - anchorX, p.y - my);
+    if (dist <= massRadius + 10) {
+      state.dragging = true;
+      state.dragX = (my - equilibriumY) / pxPerUnitB;
+      state.previewMean = previewMeanOf(state.dragX);
+      canvasB.setPointerCapture(evt.pointerId);
+    }
+  });
+
+  canvasB.addEventListener("pointermove", (evt) => {
+    if (!state.dragging) return;
+    const p = bPointerFromEvent(evt);
+    const clampedY = Math.max(anchorY + massRadius, Math.min(Bh - bottomMargin, p.y));
+    let x = (clampedY - equilibriumY) / pxPerUnitB;
+    x = Math.max(-XMAX, Math.min(XMAX, x));
+    state.dragX = x;
+    state.previewMean = previewMeanOf(x);
+  });
+
+  function releaseDrag() {
+    if (!state.dragging) return;
+    state.dragging = false;
+
+    const x0 = state.dragX;
+    const alpha = x0 / Math.SQRT2;
+    const { dist, mean } = coherentDistribution(alpha);
+
+    // Weighted random draw = the actual quantum measurement outcome, not "nearest integer".
+    let r = Math.random(), acc = 0, n = NMAX;
+    for (let k = 0; k <= NMAX; k++) {
+      acc += dist[k];
+      if (r <= acc) { n = k; break; }
+    }
+
+    lastDist = dist;
+    lastMeanN = mean;
+    lastOutcomeN = n;
+
+    const sign = x0 >= 0 ? 1 : -1;
+    state.n = n;
+    state.A = amplitudeOf(n);
+    state.Astart = state.A;
+    state.Aend = state.A;
+    state.tweenT = 1;
+    state.theta = sign > 0 ? 0 : Math.PI;
+    state.running = true;
+    updateLadderText(n);
+    showToast(
+      `Coherent state ⟨n̄⟩=${mean.toFixed(2)} measured → n=${n} (P=${(dist[n] * 100).toFixed(1)}%)`
+    );
+  }
+
+  canvasB.addEventListener("pointerup", releaseDrag);
+  canvasB.addEventListener("pointercancel", releaseDrag);
+
+  // ---------- Controls ----------
+  nSlider.addEventListener("input", () => setN(parseInt(nSlider.value, 10)));
+
+  btnLower.addEventListener("click", () => {
+    if (state.n === 0) return;
+    setN(state.n - 1);
+    btnLower.classList.add("flash-lower");
+    setTimeout(() => btnLower.classList.remove("flash-lower"), 300);
+    showToast(`â|${state.n + 1}⟩ = √${state.n + 1}|${state.n}⟩`);
+  });
+
+  btnRaise.addEventListener("click", () => {
+    if (state.n === NMAX) return;
+    const prev = state.n;
+    setN(state.n + 1);
+    btnRaise.classList.add("flash-raise");
+    setTimeout(() => btnRaise.classList.remove("flash-raise"), 300);
+    showToast(`â†|${prev}⟩ = √${prev + 1}|${prev + 1}⟩`);
+  });
+
+  document.querySelectorAll('input[name="mode"]').forEach((el) => {
+    el.addEventListener("change", (e) => { if (e.target.checked) state.mode = e.target.value; });
+  });
+
+  btnPlay.addEventListener("click", () => {
+    state.running = !state.running;
+    btnPlay.textContent = state.running ? "⏸ Pause" : "▶ Play";
+  });
+
+  function resetSingleDemo() {
+    state.dragging = false;
+    state.theta = Math.PI / 2;
+    setN(0);
+    state.A = amplitudeOf(0);
+    state.Astart = state.A;
+    state.Aend = state.A;
+    state.tweenT = 1;
+    state.running = true;
+    lastDist = coherentDistribution(0).dist;
+    lastMeanN = 0;
+    lastOutcomeN = 0;
+    btnPlay.textContent = "⏸ Pause";
+  }
+
+  btnReset.addEventListener("click", resetSingleDemo);
+
+  // ---------- Panel C: measurement-outcome probability bars ----------
+  const Cw = canvasC.width, Ch = canvasC.height;
+  const cMarginL = 46, cMarginR = 16, cMarginT = 14, cMarginB = 26;
+  const cPlotW = Cw - cMarginL - cMarginR, cPlotH = Ch - cMarginT - cMarginB;
+
+  function drawPanelC() {
+    ctxC.clearRect(0, 0, Cw, Ch);
+    ctxC.strokeStyle = COLOR.gridline;
+    ctxC.lineWidth = 1;
+    ctxC.beginPath();
+    ctxC.moveTo(cMarginL, cMarginT);
+    ctxC.lineTo(cMarginL, Ch - cMarginB);
+    ctxC.lineTo(Cw - cMarginR, Ch - cMarginB);
+    ctxC.stroke();
+
+    const maxP = Math.max(0.05, ...lastDist);
+    const barSlot = cPlotW / (NMAX + 1);
+
+    for (let k = 0; k <= NMAX; k++) {
+      const bh = (lastDist[k] / maxP) * cPlotH;
+      const bx = cMarginL + k * barSlot + barSlot * 0.18;
+      const bw = barSlot * 0.64;
+      const by = Ch - cMarginB - bh;
+      ctxC.fillStyle = k === lastOutcomeN ? COLOR.orange : COLOR.blue;
+      ctxC.globalAlpha = k === lastOutcomeN ? 0.95 : 0.35;
+      ctxC.fillRect(bx, by, bw, bh);
+      ctxC.globalAlpha = 1;
+
+      ctxC.fillStyle = COLOR.muted;
+      ctxC.font = "10px system-ui, sans-serif";
+      ctxC.textAlign = "center";
+      ctxC.fillText(String(k), bx + bw / 2, Ch - cMarginB + 14);
+      if (lastDist[k] > 0.02) {
+        ctxC.fillText((lastDist[k] * 100).toFixed(0) + "%", bx + bw / 2, by - 4);
+      }
+      ctxC.textAlign = "left";
+    }
+
+    // mean marker
+    const meanClamped = Math.max(0, Math.min(NMAX, lastMeanN));
+    const meanX = cMarginL + (meanClamped + 0.5) * barSlot;
+    ctxC.save();
+    ctxC.strokeStyle = COLOR.aqua;
+    ctxC.setLineDash([4, 3]);
+    ctxC.lineWidth = 2;
+    ctxC.beginPath();
+    ctxC.moveTo(meanX, cMarginT);
+    ctxC.lineTo(meanX, Ch - cMarginB);
+    ctxC.stroke();
+    ctxC.restore();
+    ctxC.fillStyle = COLOR.aqua;
+    ctxC.font = "11px system-ui, sans-serif";
+    ctxC.fillText("n̄=" + lastMeanN.toFixed(2), Math.min(meanX + 5, Cw - 70), cMarginT + 12);
+  }
+
+  function updateAndDrawSingle(dt) {
+    if (state.tweenT < 1) {
+      state.tweenT = Math.min(1, state.tweenT + dt / state.tweenDur);
+      state.A = lerp(state.Astart, state.Aend, easeOutCubic(state.tweenT));
+    }
+
+    if (state.running && !state.dragging) {
+      state.theta += state.omegaDisplay * dt;
+    }
+
+    const xCurrent = state.dragging ? state.dragX : state.A * Math.cos(state.theta);
+
+    drawPanelB(xCurrent, state.dragging, state.previewMean);
+    drawPanelA(xCurrent);
+    drawPanelC();
+    updateInfoLabels(state.n, xCurrent);
+  }
+
+  // ================================================================
+  // Tab 2: periodic chain of coupled oscillators (phonons)
+  //
+  // H = sum_k [ (1/2m) p_k p_-k + (1/2) m w_k^2 x_k x_-k ],  w_k^2 = (4K/m) sin^2(k a/2)
+  // This decouples the chain into N independent oscillators, one per allowed k = 2*pi*n/N
+  // (n = 0..N-1, a = 1). Each is exactly the single-oscillator problem from tab 1, just with
+  // its own w_k in place of w=1 — so it reuses the same hermite()/psi() eigenfunctions in the
+  // mode's own dimensionless coordinate, and the same turning-point formula amplitudeOf(n).
+  // ================================================================
+  const canvasChainReal = document.getElementById("chainReal");
+  const ctxChainReal = canvasChainReal.getContext("2d");
+  const canvasChainDispersion = document.getElementById("chainDispersion");
+  const ctxChainDispersion = canvasChainDispersion.getContext("2d");
+  const canvasChainLevels = document.getElementById("chainLevels");
+  const ctxChainLevels = canvasChainLevels.getContext("2d");
+  const canvasChainOccupation = document.getElementById("chainOccupation");
+  const ctxChainOccupation = canvasChainOccupation.getContext("2d");
+
+  const chNSlider = document.getElementById("chNSlider");
+  const chNLabel = document.getElementById("chNLabel");
+  const chStiffSlider = document.getElementById("chStiffSlider");
+  const chStiffLabel = document.getElementById("chStiffLabel");
+  const chModeSlider = document.getElementById("chModeSlider");
+  const chModeLabel = document.getElementById("chModeLabel");
+  const chKLabel = document.getElementById("chKLabel");
+  const chOmegaLabel = document.getElementById("chOmegaLabel");
+  const chNkLabel = document.getElementById("chNkLabel");
+  const chELabel = document.getElementById("chELabel");
+  const chLadderText = document.getElementById("chLadderText");
+  const chZeroModeNote = document.getElementById("chZeroModeNote");
+  const chBtnLower = document.getElementById("chBtnLower");
+  const chBtnRaise = document.getElementById("chBtnRaise");
+  const chBtnPlay = document.getElementById("chBtnPlay");
+  const chBtnReset = document.getElementById("chBtnReset");
+
+  // Every allowed k is its own independent oscillator, so the chain's state is a PRODUCT state
+  // |n_0, n_1, ..., n_(N-1)>, one occupation number per mode — not one shared number. chain.nk[n]
+  // and the tween arrays are indexed by mode index n; the ladder buttons only ever touch the
+  // currently-selected mode's entry, exactly like a-hat_k / a-hat-dagger_k acting on |n_k> alone.
+  const chain = {
+    N: 10,
+    stiffness: 1, // K/m
+    modeIndex: 2, // which mode the controls/ladder/levels panel is currently inspecting
+    nk: [], // occupation number per mode, length N
+    A: [], Astart: [], Aend: [], tweenT: [], tweenDur: 0.5, // per-mode amplitude tween state
+    t: 0,
+    visualSpeed: 1.6, // frames run at this multiple of the true w_k, purely so slow modes are visible
+    running: true
+  };
+
+  function chainKOf(n, N) {
+    const k = (2 * Math.PI * n) / N;
+    return k > Math.PI ? k - 2 * Math.PI : k; // wrap into (-pi, pi]
+  }
+  function chainOmegaOf(k, stiffness) {
+    return Math.sqrt(4 * stiffness) * Math.abs(Math.sin(k / 2));
+  }
+  // Physical (real-space) turning-point amplitude: the dimensionless amplitudeOf(n) = sqrt(2n+1)
+  // is identical to tab 1's; w only rescales it back into real x via x = xi / sqrt(w).
+  function chainPhysicalAmplitude(n, omega) {
+    return omega > 1e-4 ? amplitudeOf(n) / Math.sqrt(omega) : null;
+  }
+  function chainCurrentK() { return chainKOf(chain.modeIndex, chain.N); }
+  function chainCurrentOmega() { return chainOmegaOf(chainCurrentK(), chain.stiffness); }
+  function chainEnergyOf(n, omega) { return omega * (n + 0.5); }
+
+  // (Re)builds all N per-mode arrays from scratch, occupation numbers reset to the vacuum.
+  // Changing N changes every mode's k = 2*pi*n/N at once, so there is no sensible way to carry
+  // occupation numbers over — this mirrors resetChainDemo()'s "just reset it" approach.
+  function chainInitArrays() {
+    const N = chain.N;
+    chain.nk = new Array(N).fill(0);
+    chain.A = new Array(N);
+    chain.Astart = new Array(N);
+    chain.Aend = new Array(N);
+    chain.tweenT = new Array(N).fill(1);
+    for (let n = 0; n < N; n++) {
+      const omega = chainOmegaOf(chainKOf(n, N), chain.stiffness);
+      const amp = chainPhysicalAmplitude(0, omega) || 0;
+      chain.A[n] = amp;
+      chain.Astart[n] = amp;
+      chain.Aend[n] = amp;
+    }
+  }
+
+  function retargetChainMode(n) {
+    const omega = chainOmegaOf(chainKOf(n, chain.N), chain.stiffness);
+    const target = chainPhysicalAmplitude(chain.nk[n], omega);
+    chain.Astart[n] = chain.A[n];
+    chain.Aend[n] = target == null ? 0 : target;
+    chain.tweenT[n] = 0;
+  }
+
+  function retargetAllChainModes() {
+    for (let n = 0; n < chain.N; n++) retargetChainMode(n);
+  }
+
+  function updateChainLadderText(nk) {
+    const lowerHtml = nk === 0
+      ? `âₖ|0⟩ = 0 <span style="color:var(--text-muted)">(vacuum — cannot lower further)</span>`
+      : `âₖ|${nk}⟩ = √${nk} |${nk - 1}⟩ = <span class="eq">${Math.sqrt(nk).toFixed(3)}</span> |${nk - 1}⟩`;
+    const raiseHtml = nk === NMAX
+      ? `âₖ<sup>†</sup>|${nk}⟩ = √${nk + 1} |${nk + 1}⟩ <span style="color:var(--text-muted)">(display capped at n=${NMAX})</span>`
+      : `âₖ<sup>†</sup>|${nk}⟩ = √${nk + 1} |${nk + 1}⟩ = <span class="eq">${Math.sqrt(nk + 1).toFixed(3)}</span> |${nk + 1}⟩`;
+    chLadderText.innerHTML = lowerHtml + "<br>" + raiseHtml;
+  }
+
+  function updateChainLabels() {
+    const k = chainCurrentK();
+    const omega = chainCurrentOmega();
+    const isZeroMode = omega < 1e-4;
+    const nkSel = chain.nk[chain.modeIndex];
+    chNLabel.textContent = chain.N;
+    chStiffLabel.textContent = chain.stiffness.toFixed(2);
+    chModeLabel.textContent = chain.modeIndex;
+    chKLabel.textContent = k.toFixed(3);
+    chOmegaLabel.textContent = omega.toFixed(3);
+    chNkLabel.textContent = nkSel;
+    chELabel.textContent = chainEnergyOf(nkSel, omega).toFixed(3);
+    updateChainLadderText(nkSel);
+    chZeroModeNote.style.opacity = isZeroMode ? "1" : "0";
+    chBtnLower.disabled = isZeroMode || nkSel === 0;
+    chBtnRaise.disabled = isZeroMode || nkSel === NMAX;
+  }
+
+  function setChainN(newN) {
+    newN = Math.max(4, Math.min(20, newN));
+    chain.N = newN;
+    chModeSlider.max = String(newN - 1);
+    if (chain.modeIndex > newN - 1) chain.modeIndex = newN - 1;
+    chModeSlider.value = String(chain.modeIndex);
+    chainInitArrays(); // k-grid changed for every mode — start this configuration fresh
+    updateChainLabels();
+  }
+
+  function setChainStiffness(v) {
+    chain.stiffness = v;
+    retargetAllChainModes(); // K/m rescales every mode's omega_k, but occupation numbers survive
+    updateChainLabels();
+  }
+
+  function setChainMode(newModeIndex) {
+    chain.modeIndex = Math.max(0, Math.min(chain.N - 1, newModeIndex));
+    // Just changes which mode the panel is inspecting — every mode keeps animating independently.
+    updateChainLabels();
+  }
+
+  function setChainNk(newNk) {
+    chain.nk[chain.modeIndex] = Math.max(0, Math.min(NMAX, newNk));
+    retargetChainMode(chain.modeIndex); // a-hat_k / a-hat-dagger_k only touch this one mode
+    updateChainLabels();
+  }
+
+  function resetChainDemo() {
+    chain.N = 10;
+    chain.stiffness = 1;
+    chain.modeIndex = 2; // avoid defaulting to the degenerate k=0 mode
+    chain.t = 0;
+    chain.running = true;
+    chNSlider.value = "10";
+    chStiffSlider.value = "1";
+    chModeSlider.max = "9";
+    chModeSlider.value = "2";
+    chBtnPlay.textContent = "⏸ Pause";
+    chainInitArrays();
+    updateChainLabels();
+  }
+
+  chNSlider.addEventListener("input", () => setChainN(parseInt(chNSlider.value, 10)));
+  chStiffSlider.addEventListener("input", () => setChainStiffness(parseFloat(chStiffSlider.value)));
+  chModeSlider.addEventListener("input", () => setChainMode(parseInt(chModeSlider.value, 10)));
+
+  chBtnLower.addEventListener("click", () => {
+    if (chain.nk[chain.modeIndex] === 0) return;
+    setChainNk(chain.nk[chain.modeIndex] - 1);
+    chBtnLower.classList.add("flash-lower");
+    setTimeout(() => chBtnLower.classList.remove("flash-lower"), 300);
+  });
+  chBtnRaise.addEventListener("click", () => {
+    if (chain.nk[chain.modeIndex] === NMAX) return;
+    setChainNk(chain.nk[chain.modeIndex] + 1);
+    chBtnRaise.classList.add("flash-raise");
+    setTimeout(() => chBtnRaise.classList.remove("flash-raise"), 300);
+  });
+  chBtnPlay.addEventListener("click", () => {
+    chain.running = !chain.running;
+    chBtnPlay.textContent = chain.running ? "⏸ Pause" : "▶ Play";
+  });
+  chBtnReset.addEventListener("click", resetChainDemo);
+
+  // Click a dot on the dispersion curve to jump straight to that mode (alternative to the slider).
+  canvasChainDispersion.addEventListener("pointerdown", (evt) => {
+    const rect = canvasChainDispersion.getBoundingClientRect();
+    const scaleX = canvasChainDispersion.width / rect.width;
+    const px = (evt.clientX - rect.left) * scaleX;
+    const marginL = 42, marginR = 14; // must match drawChainDispersion's margins
+    const plotW = canvasChainDispersion.width - marginL - marginR;
+    const kClicked = ((px - marginL) / plotW) * (2 * Math.PI) - Math.PI;
+
+    let bestN = chain.modeIndex, bestDist = Infinity;
+    for (let n = 0; n < chain.N; n++) {
+      const d = Math.abs(chainKOf(n, chain.N) - kClicked);
+      if (d < bestDist) { bestDist = d; bestN = n; }
+    }
+    chModeSlider.value = String(bestN);
+    setChainMode(bestN);
+  });
+
+  function drawChainReal() {
+    const w = canvasChainReal.width, h = canvasChainReal.height;
+    ctxChainReal.clearRect(0, 0, w, h);
+
+    const marginX = 26, marginY = 40;
+    const plotW = w - 2 * marginX;
+    const midY = h / 2;
+    const N = chain.N;
+    const isZeroMode = chainCurrentOmega() < 1e-4;
+
+    const xs = [];
+    for (let j = 0; j < N; j++) xs.push(marginX + (plotW * j) / (N - 1));
+
+    const PX_PER_UNIT = 16;
+    const MAX_PX = h / 2 - 30;
+
+    // Real displacement is the SUM over every independent mode's own contribution — each mode
+    // keeps its own occupation number n_k and therefore its own amplitude, exactly like N separate
+    // copies of tab 1 running at once (a-hat_k / a-hat-dagger_k only ever touch their own |n_k>).
+    function totalOffsetUnits(jf) {
+      let sum = 0;
+      for (let n = 0; n < N; n++) {
+        const kn = chainKOf(n, N);
+        const omegaN = chainOmegaOf(kn, chain.stiffness);
+        if (omegaN < 1e-4) continue; // the zero mode contributes no bound oscillation
+        sum += chain.A[n] * Math.cos(kn * jf - omegaN * chain.visualSpeed * chain.t);
+      }
+      return sum;
+    }
+
+    const ys = xs.map((_, j) => {
+      const offsetPx = totalOffsetUnits(j) * PX_PER_UNIT;
+      return midY - Math.max(-MAX_PX, Math.min(MAX_PX, offsetPx));
+    });
+
+    // Faint reference curve: what the currently-selected mode looks like entirely on its own,
+    // isolated from every other mode's contribution.
+    const kSel = chainCurrentK(), omegaSel = chainCurrentOmega();
+    if (!isZeroMode) {
+      ctxChainReal.save();
+      ctxChainReal.setLineDash([2, 3]);
+      ctxChainReal.strokeStyle = COLOR.orange;
+      ctxChainReal.globalAlpha = 0.55;
+      ctxChainReal.lineWidth = 1.5;
+      ctxChainReal.beginPath();
+      const STEPS = 120;
+      for (let s = 0; s <= STEPS; s++) {
+        const jf = ((N - 1) * s) / STEPS;
+        const offsetPx = chain.A[chain.modeIndex] * PX_PER_UNIT *
+          Math.cos(kSel * jf - omegaSel * chain.visualSpeed * chain.t);
+        const px = marginX + (plotW * jf) / (N - 1);
+        const py = midY - Math.max(-MAX_PX, Math.min(MAX_PX, offsetPx));
+        if (s === 0) ctxChainReal.moveTo(px, py); else ctxChainReal.lineTo(px, py);
+      }
+      ctxChainReal.stroke();
+      ctxChainReal.restore();
+      ctxChainReal.fillStyle = COLOR.orange;
+      ctxChainReal.font = "10px system-ui, sans-serif";
+      ctxChainReal.fillText(`mode n=${chain.modeIndex} alone`, marginX, marginY - 20);
+    }
+
+    // periodic connector: dashed arc from atom N-1 back to atom 0, below the row
+    ctxChainReal.save();
+    ctxChainReal.setLineDash([5, 4]);
+    ctxChainReal.strokeStyle = COLOR.muted;
+    ctxChainReal.globalAlpha = 0.7;
+    ctxChainReal.beginPath();
+    ctxChainReal.moveTo(xs[N - 1], ys[N - 1]);
+    ctxChainReal.quadraticCurveTo(w / 2, h - 14, xs[0], ys[0]);
+    ctxChainReal.stroke();
+    ctxChainReal.restore();
+    ctxChainReal.fillStyle = COLOR.muted;
+    ctxChainReal.font = "10px system-ui, sans-serif";
+    ctxChainReal.textAlign = "center";
+    ctxChainReal.fillText("periodic: N ↔ 1", w / 2, h - 4);
+
+    // springs between neighbors
+    ctxChainReal.strokeStyle = COLOR.inkSecondary;
+    ctxChainReal.lineWidth = 1.5;
+    for (let j = 0; j < N - 1; j++) {
+      drawSpring(ctxChainReal, xs[j], ys[j], xs[j + 1], ys[j + 1], 3);
+    }
+
+    // atoms
+    const r = Math.max(5, Math.min(11, plotW / (N * 2.2)));
+    for (let j = 0; j < N; j++) {
+      const grad = ctxChainReal.createRadialGradient(
+        xs[j] - r * 0.35, ys[j] - r * 0.35, 1, xs[j], ys[j], r
+      );
+      grad.addColorStop(0, "#6fa8ec");
+      grad.addColorStop(1, COLOR.blue);
+      ctxChainReal.beginPath();
+      ctxChainReal.arc(xs[j], ys[j], r, 0, Math.PI * 2);
+      ctxChainReal.fillStyle = grad;
+      ctxChainReal.fill();
+      if (N <= 14) {
+        ctxChainReal.fillStyle = COLOR.muted;
+        ctxChainReal.font = "9px system-ui, sans-serif";
+        ctxChainReal.fillText(String(j), xs[j], ys[j] - r - 5);
+      }
+    }
+    ctxChainReal.textAlign = "left";
+
+    if (isZeroMode) {
+      ctxChainReal.fillStyle = COLOR.orange;
+      ctxChainReal.font = "12px system-ui, sans-serif";
+      ctxChainReal.textAlign = "center";
+      ctxChainReal.fillText("ω = 0 — rigid translation, no restoring force", w / 2, marginY - 18);
+      ctxChainReal.textAlign = "left";
+    }
+  }
+
+  function drawChainDispersion() {
+    const w = canvasChainDispersion.width, h = canvasChainDispersion.height;
+    ctxChainDispersion.clearRect(0, 0, w, h);
+
+    const marginL = 42, marginR = 14, marginT = 14, marginB = 26;
+    const plotW = w - marginL - marginR, plotH = h - marginT - marginB;
+    const omegaMax = Math.sqrt(4 * chain.stiffness);
+    const omegaTop = omegaMax * 1.18;
+
+    const kToPx = (k) => marginL + ((k + Math.PI) / (2 * Math.PI)) * plotW;
+    const omegaToPy = (om) => h - marginB - (om / omegaTop) * plotH;
+
+    ctxChainDispersion.strokeStyle = COLOR.gridline;
+    ctxChainDispersion.lineWidth = 1;
+    ctxChainDispersion.beginPath();
+    ctxChainDispersion.moveTo(marginL, marginT);
+    ctxChainDispersion.lineTo(marginL, h - marginB);
+    ctxChainDispersion.lineTo(w - marginR, h - marginB);
+    ctxChainDispersion.stroke();
+
+    ctxChainDispersion.fillStyle = COLOR.muted;
+    ctxChainDispersion.font = "11px system-ui, sans-serif";
+    ctxChainDispersion.fillText("ω", marginL - 14, marginT + 4);
+    ["-π", "-π/2", "0", "π/2", "π"].forEach((label, i) => {
+      const k = -Math.PI + (i * Math.PI) / 2;
+      const px = kToPx(k);
+      ctxChainDispersion.beginPath();
+      ctxChainDispersion.moveTo(px, h - marginB);
+      ctxChainDispersion.lineTo(px, h - marginB + 4);
+      ctxChainDispersion.strokeStyle = COLOR.gridline;
+      ctxChainDispersion.stroke();
+      ctxChainDispersion.textAlign = "center";
+      ctxChainDispersion.fillText(label, px, h - marginB + 15);
+    });
+    ctxChainDispersion.textAlign = "left";
+
+    // omega_max reference line
+    ctxChainDispersion.save();
+    ctxChainDispersion.setLineDash([4, 4]);
+    ctxChainDispersion.strokeStyle = COLOR.baseline;
+    ctxChainDispersion.beginPath();
+    ctxChainDispersion.moveTo(marginL, omegaToPy(omegaMax));
+    ctxChainDispersion.lineTo(w - marginR, omegaToPy(omegaMax));
+    ctxChainDispersion.stroke();
+    ctxChainDispersion.restore();
+    ctxChainDispersion.fillStyle = COLOR.muted;
+    ctxChainDispersion.font = "10px system-ui, sans-serif";
+    ctxChainDispersion.fillText("ω_max = 2√(K/m)", marginL + 4, omegaToPy(omegaMax) - 4);
+
+    // dispersion curve
+    ctxChainDispersion.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const k = -Math.PI + (2 * Math.PI * i) / 200;
+      const om = chainOmegaOf(k, chain.stiffness);
+      const px = kToPx(k), py = omegaToPy(om);
+      if (i === 0) ctxChainDispersion.moveTo(px, py); else ctxChainDispersion.lineTo(px, py);
+    }
+    ctxChainDispersion.strokeStyle = COLOR.inkSecondary;
+    ctxChainDispersion.lineWidth = 2;
+    ctxChainDispersion.stroke();
+
+    // discrete allowed modes
+    for (let n = 0; n < chain.N; n++) {
+      const k = chainKOf(n, chain.N);
+      const om = chainOmegaOf(k, chain.stiffness);
+      const px = kToPx(k), py = omegaToPy(om);
+      const isSelected = n === chain.modeIndex;
+      ctxChainDispersion.beginPath();
+      ctxChainDispersion.arc(px, py, isSelected ? 5 : 2.5, 0, Math.PI * 2);
+      ctxChainDispersion.fillStyle = isSelected ? COLOR.orange : COLOR.blue;
+      ctxChainDispersion.globalAlpha = isSelected ? 1 : 0.55;
+      ctxChainDispersion.fill();
+      ctxChainDispersion.globalAlpha = 1;
+    }
+  }
+
+  function drawChainLevels() {
+    const w = canvasChainLevels.width, h = canvasChainLevels.height;
+    ctxChainLevels.clearRect(0, 0, w, h);
+
+    const nkSel = chain.nk[chain.modeIndex];
+    const omega = chainCurrentOmega();
+    if (omega < 1e-4) {
+      ctxChainLevels.fillStyle = COLOR.muted;
+      ctxChainLevels.font = "13px system-ui, sans-serif";
+      ctxChainLevels.textAlign = "center";
+      ctxChainLevels.fillText("no bound levels — ω = 0 for this mode", w / 2, h / 2);
+      ctxChainLevels.textAlign = "left";
+      return;
+    }
+
+    const marginL = 40, marginR = 14, marginT = 12, marginB = 26;
+    const plotW = w - marginL - marginR, plotH = h - marginT - marginB;
+    const XMAXc = amplitudeOf(NMAX) + 0.8;
+    const ETOPc = Math.max(NMAX + 1.8, (XMAXc * XMAXc) / 2 + 0.3);
+
+    const xToPxC = (x) => marginL + ((x + XMAXc) / (2 * XMAXc)) * plotW;
+    const eToPyC = (e) => h - marginB - (e / ETOPc) * plotH;
+
+    ctxChainLevels.strokeStyle = COLOR.gridline;
+    ctxChainLevels.lineWidth = 1;
+    ctxChainLevels.beginPath();
+    ctxChainLevels.moveTo(marginL, marginT);
+    ctxChainLevels.lineTo(marginL, h - marginB);
+    ctxChainLevels.lineTo(w - marginR, h - marginB);
+    ctxChainLevels.stroke();
+    ctxChainLevels.fillStyle = COLOR.muted;
+    ctxChainLevels.font = "10px system-ui, sans-serif";
+    ctxChainLevels.fillText("E/ħωₖ", marginL - 8, marginT + 2);
+    ctxChainLevels.fillText("ξ", w - marginR - 6, h - marginB + 15);
+
+    for (let lvl = 0; lvl <= NMAX; lvl++) {
+      const e = lvl + 0.5;
+      const py = eToPyC(e);
+      const isSelected = lvl === nkSel;
+      const Alvl = amplitudeOf(lvl);
+      ctxChainLevels.save();
+      ctxChainLevels.setLineDash(isSelected ? [] : [5, 4]);
+      ctxChainLevels.strokeStyle = isSelected ? COLOR.blue : COLOR.muted;
+      ctxChainLevels.globalAlpha = isSelected ? 0.9 : 0.4;
+      ctxChainLevels.lineWidth = isSelected ? 2 : 1;
+      ctxChainLevels.beginPath();
+      ctxChainLevels.moveTo(xToPxC(-Alvl), py);
+      ctxChainLevels.lineTo(xToPxC(Alvl), py);
+      ctxChainLevels.stroke();
+      ctxChainLevels.restore();
+    }
+
+    // potential parabola V(xi) = xi^2 / 2
+    ctxChainLevels.beginPath();
+    for (let i = 0; i <= 150; i++) {
+      const x = -XMAXc + (2 * XMAXc * i) / 150;
+      const e = Math.min((x * x) / 2, ETOPc);
+      const px = xToPxC(x), py = eToPyC(e);
+      if (i === 0) ctxChainLevels.moveTo(px, py); else ctxChainLevels.lineTo(px, py);
+    }
+    ctxChainLevels.strokeStyle = COLOR.baseline;
+    ctxChainLevels.lineWidth = 2;
+    ctxChainLevels.stroke();
+
+    // wavefunction for the selected phonon number
+    const baseE = nkSel + 0.5;
+    const baseline = eToPyC(baseE);
+    const N_SAMPLES = 180;
+    const samples = [];
+    let maxAbs = 1e-9;
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAXc + (2 * XMAXc * i) / N_SAMPLES;
+      const v = psi(nkSel, x);
+      samples.push(v);
+      if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+    }
+    const scale = 0.42 / maxAbs;
+
+    ctxChainLevels.beginPath();
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAXc + (2 * XMAXc * i) / N_SAMPLES;
+      const py = eToPyC(baseE + samples[i] * scale);
+      const px = xToPxC(x);
+      if (i === 0) ctxChainLevels.moveTo(px, py); else ctxChainLevels.lineTo(px, py);
+    }
+    for (let i = N_SAMPLES; i >= 0; i--) {
+      const x = -XMAXc + (2 * XMAXc * i) / N_SAMPLES;
+      ctxChainLevels.lineTo(xToPxC(x), baseline);
+    }
+    ctxChainLevels.closePath();
+    ctxChainLevels.fillStyle = COLOR.blue;
+    ctxChainLevels.globalAlpha = 0.18;
+    ctxChainLevels.fill();
+    ctxChainLevels.globalAlpha = 1;
+
+    ctxChainLevels.beginPath();
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAXc + (2 * XMAXc * i) / N_SAMPLES;
+      const py = eToPyC(baseE + samples[i] * scale);
+      const px = xToPxC(x);
+      if (i === 0) ctxChainLevels.moveTo(px, py); else ctxChainLevels.lineTo(px, py);
+    }
+    ctxChainLevels.strokeStyle = COLOR.blue;
+    ctxChainLevels.lineWidth = 2.2;
+    ctxChainLevels.stroke();
+  }
+
+  function drawChainOccupation() {
+    const w = canvasChainOccupation.width, h = canvasChainOccupation.height;
+    ctxChainOccupation.clearRect(0, 0, w, h);
+
+    const marginL = 4, marginR = 4, marginT = 4, marginB = 14;
+    const plotW = w - marginL - marginR, plotH = h - marginT - marginB;
+    const N = chain.N;
+    const slot = plotW / N;
+    const showLabels = N <= 20;
+
+    for (let n = 0; n < N; n++) {
+      const nk = chain.nk[n];
+      const barH = (nk / NMAX) * plotH;
+      const bx = marginL + n * slot + slot * 0.12;
+      const bw = slot * 0.76;
+      const by = h - marginB - barH;
+      const isSelected = n === chain.modeIndex;
+      ctxChainOccupation.fillStyle = isSelected ? COLOR.orange : COLOR.blue;
+      ctxChainOccupation.globalAlpha = nk === 0 ? 0.25 : (isSelected ? 1 : 0.7);
+      ctxChainOccupation.fillRect(bx, by, bw, Math.max(barH, 2));
+      ctxChainOccupation.globalAlpha = 1;
+      if (isSelected) {
+        ctxChainOccupation.strokeStyle = COLOR.ink;
+        ctxChainOccupation.lineWidth = 1;
+        ctxChainOccupation.strokeRect(bx, by, bw, Math.max(barH, 2));
+      }
+      if (showLabels) {
+        ctxChainOccupation.fillStyle = COLOR.muted;
+        ctxChainOccupation.font = "9px system-ui, sans-serif";
+        ctxChainOccupation.textAlign = "center";
+        ctxChainOccupation.fillText(String(nk), bx + bw / 2, h - marginB - barH - 4 < 8 ? 10 : h - marginB - barH - 4);
+        ctxChainOccupation.fillText(String(n), bx + bw / 2, h - 3);
+        ctxChainOccupation.textAlign = "left";
+      }
+    }
+  }
+
+  // Click a mode's bar in the occupation panel to select it (a third way to change k).
+  canvasChainOccupation.addEventListener("pointerdown", (evt) => {
+    const rect = canvasChainOccupation.getBoundingClientRect();
+    const scaleX = canvasChainOccupation.width / rect.width;
+    const px = (evt.clientX - rect.left) * scaleX;
+    const marginL = 4, marginR = 4;
+    const plotW = canvasChainOccupation.width - marginL - marginR;
+    const n = Math.max(0, Math.min(chain.N - 1, Math.floor(((px - marginL) / plotW) * chain.N)));
+    chModeSlider.value = String(n);
+    setChainMode(n);
+  });
+
+  function updateAndDrawChain(dt) {
+    for (let n = 0; n < chain.N; n++) {
+      if (chain.tweenT[n] < 1) {
+        chain.tweenT[n] = Math.min(1, chain.tweenT[n] + dt / chain.tweenDur);
+        chain.A[n] = lerp(chain.Astart[n], chain.Aend[n], easeOutCubic(chain.tweenT[n]));
+      }
+    }
+    if (chain.running) chain.t += dt;
+
+    drawChainReal();
+    drawChainDispersion();
+    drawChainLevels();
+    drawChainOccupation();
+  }
+
+  // ---------- Tab switching ----------
+  let activeTab = "single";
+  const tabButtons = document.querySelectorAll(".tab-btn");
+  const tabPageSingle = document.getElementById("tab-single");
+  const tabPageChain = document.getElementById("tab-chain");
+
+  tabButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.tab;
+      if (tab === activeTab) return;
+      activeTab = tab;
+      tabButtons.forEach((b) => b.classList.toggle("active", b === btn));
+      tabPageSingle.classList.toggle("active", tab === "single");
+      tabPageChain.classList.toggle("active", tab === "chain");
+      if (tab === "single") resetSingleDemo(); else resetChainDemo();
+    });
+  });
+
+  // ---------- Animation loop ----------
+  let lastFrameTime = null;
+  function frame(ts) {
+    if (lastFrameTime == null) lastFrameTime = ts;
+    const dt = Math.min(0.05, (ts - lastFrameTime) / 1000);
+    lastFrameTime = ts;
+
+    if (activeTab === "single") updateAndDrawSingle(dt);
+    else updateAndDrawChain(dt);
+
+    requestAnimationFrame(frame);
+  }
+
+  updateLadderText(0);
+  updateInfoLabels(0, amplitudeOf(0) * Math.cos(state.theta));
+  resetChainDemo();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
