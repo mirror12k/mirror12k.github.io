@@ -300,6 +300,22 @@
     n=3 — it doesn't deterministically round to the "nearest" level.
   </p>
 </div>
+
+<div class="panel" style="margin-top:20px; max-width: 916px;">
+  <h2>Ladder operators as matrices (number basis) &amp; state vector |ψ⟩</h2>
+  <canvas id="panelD" width="880" height="260"></canvas>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:var(--series-aqua)"></span>â (lower) — subdiagonal ⟨n−1|â|n⟩ = √n</div>
+    <div class="item"><span class="swatch" style="background:var(--series-orange)"></span>â<span style="vertical-align:super;font-size:9px">†</span> (raise) — superdiagonal ⟨n+1|â<span style="vertical-align:super;font-size:9px">†</span>|n⟩ = √(n+1)</div>
+    <div class="item"><span class="swatch" style="background:var(--series-blue)"></span>|ψ⟩ = |n⟩, the current state as a one-hot vector</div>
+  </div>
+  <p class="hint">
+    Both operators are drawn as (NMAX+1)×(NMAX+1) grids over the truncated basis |0⟩…|9⟩; cell
+    brightness encodes |⟨row|Ô|col⟩|, so the ladder-shifting rule from the box above shows up as a
+    single off-diagonal band. The shaded column is the current ket |n⟩; the outlined cell is the one
+    entry either operator actually uses when it acts on that column.
+  </p>
+</div>
 </section>
 
 <section id="tab-chain" class="tab-page">
@@ -385,6 +401,22 @@
     </div>
   </div>
 
+</div>
+
+<div class="panel" style="margin-top:20px; max-width: 916px;">
+  <h2>Mode k's ladder operators as matrices &amp; state vector |ψ⟩</h2>
+  <canvas id="chainMatrixPanel" width="880" height="260"></canvas>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:var(--series-aqua)"></span>âₖ (lower) — subdiagonal ⟨n−1|âₖ|n⟩ = √n</div>
+    <div class="item"><span class="swatch" style="background:var(--series-orange)"></span>âₖ<span style="vertical-align:super;font-size:9px">†</span> (raise) — superdiagonal ⟨n+1|âₖ<span style="vertical-align:super;font-size:9px">†</span>|n⟩ = √(n+1)</div>
+    <div class="item"><span class="swatch" style="background:var(--series-blue)"></span>|ψ⟩ = |nₖ⟩, this mode's occupation as a one-hot vector</div>
+  </div>
+  <p class="hint">
+    Every mode has its own copy of these matrices, acting only on that mode's own Fock space — this
+    shows the currently-selected mode k's âₖ / âₖ<span style="vertical-align:super;font-size:9px">†</span>
+    and its current occupation |nₖ⟩. The shaded column is the current ket; the outlined cell is the
+    one entry either operator uses when it acts on it.
+  </p>
 </div>
 </section>
 
@@ -486,6 +518,8 @@
   const ctxA = canvasA.getContext("2d");
   const canvasC = document.getElementById("panelC");
   const ctxC = canvasC.getContext("2d");
+  const canvasD = document.getElementById("panelD");
+  const ctxD = canvasD.getContext("2d");
 
   const nSlider = document.getElementById("nSlider");
   const nLabel = document.getElementById("nLabel");
@@ -995,6 +1029,116 @@
     ctxC.fillText("n̄=" + lastMeanN.toFixed(2), Math.min(meanX + 5, Cw - 70), cMarginT + 12);
   }
 
+  // ---------- Shared: â / â† matrix shapes + |ψ⟩=|n⟩ state vector (number basis) ----------
+  // Both operators live on the same truncated (NMAX+1)-dim Fock space regardless of which tab
+  // (or, for the chain, which mode k) is asking — so this one drawer serves panelD and
+  // chainMatrixPanel alike, parameterized only by the occupation number n being highlighted.
+  const DIM = NMAX + 1;
+  const opCell = 20;
+  const opGridPx = DIM * opCell;
+
+  function drawOperatorPanel(ctx, w, h, n, labels) {
+    ctx.clearRect(0, 0, w, h);
+    const gridY0 = 46;
+    const lowerX0 = 54;
+    const raiseX0 = lowerX0 + opGridPx + 70;
+    const vecX0 = raiseX0 + opGridPx + 70;
+    const vecCellW = 34;
+
+    function indices(x0) {
+      ctx.fillStyle = COLOR.muted;
+      ctx.font = "10px system-ui, sans-serif";
+      ctx.textAlign = "center";
+      for (let c = 0; c < DIM; c++) ctx.fillText(String(c), x0 + c * opCell + opCell / 2, gridY0 - 6);
+      ctx.textAlign = "right";
+      for (let r = 0; r < DIM; r++) ctx.fillText(String(r), x0 - 6, gridY0 + r * opCell + opCell / 2 + 3);
+      ctx.textAlign = "left";
+    }
+
+    function gridLines(x0) {
+      ctx.strokeStyle = COLOR.gridline;
+      ctx.lineWidth = 1;
+      for (let i = 0; i <= DIM; i++) {
+        ctx.beginPath(); ctx.moveTo(x0, gridY0 + i * opCell); ctx.lineTo(x0 + opGridPx, gridY0 + i * opCell); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x0 + i * opCell, gridY0); ctx.lineTo(x0 + i * opCell, gridY0 + opGridPx); ctx.stroke();
+      }
+    }
+
+    function highlightColumn(x0) {
+      ctx.fillStyle = COLOR.gridline;
+      ctx.globalAlpha = 0.5;
+      ctx.fillRect(x0 + n * opCell, gridY0, opCell, opGridPx);
+      ctx.globalAlpha = 1;
+    }
+
+    function outlineCell(x0, row, col) {
+      ctx.strokeStyle = COLOR.ink;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x0 + col * opCell + 1, gridY0 + row * opCell + 1, opCell - 2, opCell - 2);
+    }
+
+    function caption(x0, text) {
+      ctx.fillStyle = COLOR.inkSecondary;
+      ctx.font = "13px system-ui, sans-serif";
+      ctx.fillText(text, x0, gridY0 - 26);
+    }
+
+    // â: <n-1|â|n> = sqrt(n), a subdiagonal band (row = col - 1)
+    indices(lowerX0);
+    gridLines(lowerX0);
+    highlightColumn(lowerX0);
+    for (let col = 1; col < DIM; col++) {
+      const row = col - 1;
+      const val = Math.sqrt(col);
+      ctx.fillStyle = COLOR.aqua;
+      ctx.globalAlpha = 0.25 + 0.75 * (val / Math.sqrt(NMAX));
+      ctx.fillRect(lowerX0 + col * opCell, gridY0 + row * opCell, opCell, opCell);
+      ctx.globalAlpha = 1;
+    }
+    if (n > 0) outlineCell(lowerX0, n - 1, n);
+    caption(lowerX0, labels.lower);
+
+    // â†: <n+1|â†|n> = sqrt(n+1), a superdiagonal band (row = col + 1)
+    indices(raiseX0);
+    gridLines(raiseX0);
+    highlightColumn(raiseX0);
+    for (let col = 0; col < DIM - 1; col++) {
+      const row = col + 1;
+      const val = Math.sqrt(col + 1);
+      ctx.fillStyle = COLOR.orange;
+      ctx.globalAlpha = 0.25 + 0.75 * (val / Math.sqrt(NMAX + 1));
+      ctx.fillRect(raiseX0 + col * opCell, gridY0 + row * opCell, opCell, opCell);
+      ctx.globalAlpha = 1;
+    }
+    if (n < NMAX) outlineCell(raiseX0, n + 1, n);
+    caption(raiseX0, labels.raise);
+
+    // |psi> = |n>: one-hot column vector in the same basis
+    ctx.fillStyle = COLOR.muted;
+    ctx.font = "10px system-ui, sans-serif";
+    ctx.textAlign = "right";
+    for (let r = 0; r < DIM; r++) ctx.fillText(String(r), vecX0 - 6, gridY0 + r * opCell + opCell / 2 + 3);
+    ctx.textAlign = "left";
+    ctx.strokeStyle = COLOR.gridline;
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= DIM; i++) {
+      ctx.beginPath(); ctx.moveTo(vecX0, gridY0 + i * opCell); ctx.lineTo(vecX0 + vecCellW, gridY0 + i * opCell); ctx.stroke();
+    }
+    ctx.beginPath(); ctx.moveTo(vecX0, gridY0); ctx.lineTo(vecX0, gridY0 + opGridPx); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(vecX0 + vecCellW, gridY0); ctx.lineTo(vecX0 + vecCellW, gridY0 + opGridPx); ctx.stroke();
+    ctx.fillStyle = COLOR.blue;
+    ctx.fillRect(vecX0 + 1, gridY0 + n * opCell + 1, vecCellW - 2, opCell - 2);
+    ctx.strokeStyle = COLOR.ink;
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect(vecX0 + 1, gridY0 + n * opCell + 1, vecCellW - 2, opCell - 2);
+    ctx.fillStyle = COLOR.ink;
+    ctx.font = "bold 11px system-ui, sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("1", vecX0 + vecCellW / 2, gridY0 + n * opCell + opCell / 2 + 4);
+    ctx.textAlign = "left";
+    caption(vecX0, labels.vec);
+  }
+
   function updateAndDrawSingle(dt) {
     if (state.tweenT < 1) {
       state.tweenT = Math.min(1, state.tweenT + dt / state.tweenDur);
@@ -1010,6 +1154,11 @@
     drawPanelB(xCurrent, state.dragging, state.previewMean);
     drawPanelA(xCurrent);
     drawPanelC();
+    drawOperatorPanel(ctxD, canvasD.width, canvasD.height, state.n, {
+      lower: "â",
+      raise: "â†",
+      vec: "|ψ⟩ = |n⟩"
+    });
     updateInfoLabels(state.n, xCurrent);
   }
 
@@ -1030,6 +1179,8 @@
   const ctxChainLevels = canvasChainLevels.getContext("2d");
   const canvasChainOccupation = document.getElementById("chainOccupation");
   const ctxChainOccupation = canvasChainOccupation.getContext("2d");
+  const canvasChainMatrix = document.getElementById("chainMatrixPanel");
+  const ctxChainMatrix = canvasChainMatrix.getContext("2d");
 
   const chNSlider = document.getElementById("chNSlider");
   const chNLabel = document.getElementById("chNLabel");
@@ -1578,6 +1729,11 @@
     drawChainDispersion();
     drawChainLevels();
     drawChainOccupation();
+    drawOperatorPanel(ctxChainMatrix, canvasChainMatrix.width, canvasChainMatrix.height, chain.nk[chain.modeIndex], {
+      lower: "âₖ",
+      raise: "âₖ†",
+      vec: "|ψ⟩ = |nₖ⟩"
+    });
   }
 
   // ---------- Tab switching ----------
