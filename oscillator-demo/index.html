@@ -179,6 +179,16 @@
     margin-top: 8px;
   }
 
+
+  .mono-box { background: var(--page-plane); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    font: 12px ui-monospace, Menlo, monospace; color: var(--text-secondary); white-space: pre-wrap; max-height: 190px; overflow: auto; }
+  .op-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+  .mini { display: inline-block; vertical-align: middle; margin: 0 4px; border-left: 2px solid var(--text-muted); border-right: 2px solid var(--text-muted); border-radius: 4px; padding: 0 3px; }
+  .mini td { padding: 1px 6px; text-align: center; font-variant-numeric: tabular-nums; color: var(--text-primary); font-size: 13px; }
+  .tbl3 { display: inline-block; vertical-align: top; margin-right: 18px; font-size: 12px; color: var(--text-secondary); }
+  .tbl3 td { padding: 2px 8px; text-align: center; border: 1px solid var(--gridline); }
+  .tbl3 td.ok { color: var(--series-aqua); }
+
   .toast {
     position: fixed;
     bottom: 24px;
@@ -204,6 +214,9 @@
 <div class="tabs">
   <button class="tab-btn active" data-tab="single" type="button">Single Oscillator</button>
   <button class="tab-btn" data-tab="chain" type="button">Coupled Chain (Phonons)</button>
+  <button class="tab-btn" data-tab="quartic" type="button">Anharmonic (Quartic)</button>
+  <button class="tab-btn" data-tab="fock1" type="button">2nd Quantization: 1 Particle (2D)</button>
+  <button class="tab-btn" data-tab="fock3" type="button">Fermi Space: 3 Modes</button>
 </div>
 
 <section id="tab-single" class="tab-page active">
@@ -417,6 +430,213 @@
     and its current occupation |nₖ⟩. The shaded column is the current ket; the outlined cell is the
     one entry either operator uses when it acts on it.
   </p>
+</div>
+</section>
+
+<section id="tab-quartic" class="tab-page">
+<p class="subtitle">
+  Same Hamiltonian as the first tab, plus one extra term: Ĥ = p̂²/2 + ½x̂² + λx̂⁴. Unlike the plain
+  ½x̂² potential, this one has no closed-form eigenstates, so the energies E<sub>n</sub> and
+  wavefunctions ψ<sub>n</sub>(x) shown here come from numerically diagonalizing Ĥ inside the
+  truncated harmonic-oscillator basis |0⟩…|9⟩ — the same basis, Hermite functions, and turning-point
+  logic as tab 1, just no longer an eigenbasis of this particular Ĥ. Two things follow directly:
+  the levels stop being evenly spaced by ħω (the quartic wall stiffens faster than the parabola, so
+  spacing grows with n instead of staying constant), and â / â<sup>†</sup> stop being ladder
+  operators for these states — they still shift |k⟩ by one step in the harmonic basis, but that no
+  longer maps one true eigenstate of Ĥ onto another, so they're not offered as controls here. Drag
+  λ up from 0 to watch the parabola's evenly-spaced levels warp continuously into the quartic ones.
+</p>
+
+<div class="layout">
+
+  <div class="panel">
+    <h2>Spring &amp; mass (classical view)</h2>
+    <canvas id="qPanelB" width="320" height="520"></canvas>
+    <p class="hint">Displays the classical analog oscillating between ±A<sub>n</sub>, the turning
+      points of V(x) = ½x² + λx⁴ at the selected level's energy. Oscillation speed here is stylized
+      for visibility, not the true (amplitude-dependent) anharmonic period.</p>
+  </div>
+
+  <div class="panel">
+    <h2>Energy levels &amp; wavefunction ψₙ(x)</h2>
+    <canvas id="qPanelA" width="560" height="460"></canvas>
+    <div class="legend">
+      <div class="item"><span class="swatch" style="background:var(--baseline)"></span>V(x) = ½x² + λx⁴ (dashed: plain ½x² for comparison)</div>
+      <div class="item"><span class="swatch" style="background:var(--text-muted)"></span>diagonalized energies Eₙ</div>
+      <div class="item"><span class="swatch" style="background:var(--series-blue)"></span>selected ψₙ(x) / |ψₙ(x)|²</div>
+      <div class="item"><span class="swatch" style="background:var(--series-orange)"></span>mass position (riding Eₙ)</div>
+    </div>
+  </div>
+
+  <div class="panel controls">
+    <h2>Controls</h2>
+
+    <div>
+      <label class="field-label">Anharmonicity λ = <b id="qLambdaLabel">0.30</b></label>
+      <input type="range" id="qLambdaSlider" min="0" max="1.5" step="0.05" value="0.3">
+    </div>
+
+    <div>
+      <label class="field-label">Eigenstate n = <b id="qNLabel">0</b></label>
+      <input type="range" id="qNSlider" min="0" max="9" step="1" value="0">
+    </div>
+
+    <div class="stat-line"><span>Energy Eₙ (diagonalized)</span><b id="qELabel">0.500</b></div>
+    <div class="stat-line"><span>SHO energy (n+½), for comparison</span><b id="qESHOLabel">0.500</b></div>
+    <div class="stat-line"><span>Classical turning point Aₙ</span><b id="qALabel">1.000</b></div>
+    <div class="stat-line"><span>Current position x(t)</span><b id="qXLabel">0.000</b></div>
+
+    <div class="row">
+      <button class="btn ghost" id="qBtnDown">− n</button>
+      <button class="btn ghost" id="qBtnUp">+ n</button>
+    </div>
+    <p class="hint">
+      No â / â<sup>†</sup> buttons on this tab — see the blurb above: those ladder operators act on
+      the harmonic basis, not on the true eigenstates of this Ĥ once λ ≠ 0.
+    </p>
+
+    <div>
+      <label class="field-label">Right-panel curve shows</label>
+      <div class="mode-toggle">
+        <label><input type="radio" name="qmode" value="psi" checked><span>ψₙ(x)</span></label>
+        <label><input type="radio" name="qmode" value="psi2"><span>|ψₙ(x)|²</span></label>
+      </div>
+    </div>
+
+    <div class="row">
+      <button class="btn ghost" id="qBtnPlay">⏸ Pause</button>
+      <button class="btn ghost" id="qBtnReset">⟲ Reset</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="panel" style="margin-top:20px; max-width: 916px;">
+  <h2>Hamiltonian in the harmonic-oscillator basis &amp; eigenstate mixing</h2>
+  <canvas id="qMatrixPanel" width="880" height="260"></canvas>
+  <div class="legend">
+    <div class="item"><span class="swatch" style="background:var(--series-blue)"></span>|⟨i|Ĥ|j⟩| heatmap</div>
+    <div class="item"><span class="swatch" style="background:var(--series-orange)"></span>|⟨k|n⟩|² — weight of basis state k in eigenstate n</div>
+  </div>
+  <p class="hint">
+    In the pure SHO, Ĥ is exactly diagonal in |0⟩…|9⟩ and every eigenstate is a single one-hot
+    basis vector (see tab 1's matrix panel). Here λx̂⁴ only couples states of matching parity
+    (|i−j| = 0, 2, or 4), so Ĥ has this banded structure instead — and diagonalizing it mixes
+    several |k⟩ into each true eigenstate |n⟩, shown as the bar chart on the right instead of a
+    single spike.
+  </p>
+</div>
+</section>
+
+
+<section id="tab-fock1" class="tab-page">
+<p class="subtitle">
+  Second quantization: instead of a wavefunction ψ(x,y), the state lives in Fock space and particles are
+  made by operators. Here a 4×4 lattice gives 16 single-particle modes. In <b>position</b> space
+  a<sup>†</sup><sub>r</sub> (bosons) or ĉ<sup>†</sup><sub>r</sub> (fermions) puts a particle at site r=(x,y). In
+  <b>momentum</b> space a<sup>†</sup><sub>k</sub> = (1/4) Σ<sub>r</sub> e<sup>i k·r</sup> a<sup>†</sup><sub>r</sub> creates a plane wave
+  with k=(2π m<sub>x</sub>/4, 2π m<sub>y</sub>/4). Acting once on the vacuum gives a single particle either way; the statistics only show
+  up when you create a second one — bosons stack (√(n+1) factors), fermions are Pauli-blocked and pick up
+  sign flips (ĉ<sup>†</sup><sub>r</sub>ĉ<sup>†</sup><sub>s</sub> = −ĉ<sup>†</sup><sub>s</sub>ĉ<sup>†</sup><sub>r</sub>). Click a cell in either grid to pick the mode.
+</p>
+<div class="layout">
+  <div class="panel">
+    <h2>Position space ⟨n<sub>r</sub>⟩</h2>
+    <canvas id="fpPos" width="320" height="330"></canvas>
+    <p class="hint">Arrows = single-particle amplitude ψ(r) (phase → direction), shown when the state has exactly one particle.</p>
+  </div>
+  <div class="panel">
+    <h2>Momentum space ⟨n<sub>k</sub>⟩</h2>
+    <canvas id="fpMom" width="320" height="330"></canvas>
+    <p class="hint">Axes are integers m with k = 2π m / 4. Arrows = ψ̃(k) = ⟨0|â<sub>k</sub>|ψ⟩.</p>
+  </div>
+  <div class="panel">
+    <h2>Particles in the box</h2>
+    <canvas id="fpBox" width="320" height="330"></canvas>
+    <p class="hint">Dots are samples drawn from the current state's ⟨n<sub>r</sub>⟩ and ⟨n<sub>k</sub>⟩ and then stream freely with
+      their sampled momentum (periodic box). Creating adds a ring pulse, destroying leaves a fading ghost. Re-sampled after every operator.</p>
+  </div>
+
+  <div class="panel controls">
+    <h2>Controls</h2>
+    <div>
+      <label class="field-label">Particle statistics</label>
+      <div class="mode-toggle">
+        <label><input type="radio" name="fstat" value="boson" checked><span>Bosons (â)</span></label>
+        <label><input type="radio" name="fstat" value="fermion"><span>Fermions (ĉ)</span></label>
+      </div>
+    </div>
+    <div>
+      <label class="field-label">Operator basis</label>
+      <div class="mode-toggle">
+        <label><input type="radio" name="fbasis" value="pos" checked><span>position r</span></label>
+        <label><input type="radio" name="fbasis" value="mom"><span>momentum k</span></label>
+      </div>
+    </div>
+    <div class="stat-line"><span>Selected mode</span><b id="fpSel"></b></div>
+    <div class="row">
+      <button class="btn raise" id="fpCreate" type="button"></button>
+      <button class="btn lower" id="fpDestroy" type="button"></button>
+    </div>
+    <div class="row">
+      <button class="btn ghost" id="fpNorm" type="button">Normalize</button>
+      <button class="btn ghost" id="fpReset" type="button">⟲ Vacuum</button>
+    </div>
+    <div class="stat-line"><span>⟨N⟩ particles</span><b id="fpN">0</b></div>
+    <div class="stat-line"><span>‖ψ‖²</span><b id="fpNorm2">1</b></div>
+    <div>
+      <label class="field-label">State |ψ⟩ (position-basis kets, occupied sites)</label>
+      <div class="mono-box" id="fpKet"></div>
+    </div>
+    <div>
+      <label class="field-label">History</label>
+      <div class="mono-box" id="fpHist" style="max-height:90px"></div>
+    </div>
+  </div>
+</div>
+<div class="panel" style="margin-top:20px; max-width: 916px;">
+  <h2>Current operator</h2>
+  <div class="ladder-box" id="fpOpText"></div>
+  <p class="hint">Particle number is capped at 3 here to keep the Fock-space expansion small.</p>
+</div>
+</section>
+
+<section id="tab-fock3" class="tab-page">
+<p class="subtitle">
+  Three fermionic modes give an 8-dimensional Fock space with basis |n₁n₂n₃⟩, n<sub>j</sub> ∈ {0,1}. Creation and
+  annihilation operators are 8×8 matrices built by the Jordan–Wigner construction: ĉ<sup>†</sup><sub>j</sub> =
+  Z⊗…⊗Z⊗σ<sup>+</sup>⊗I⊗…⊗I, where the Z string (diagonal +1/−1) supplies the fermionic sign by counting the occupied modes to the
+  left of j. Pick an operator below: the canvas shows M·ψ = ψ′ live, and Apply commits ψ ← ψ′. Orange = positive, blue = negative.
+  Click a row of ψ to jump to that basis state.
+</p>
+<div class="panel" style="max-width: 940px;">
+  <h2>Operator · state = new state</h2>
+  <canvas id="f3Canvas" width="900" height="360"></canvas>
+  <div class="op-grid" style="margin-top:12px; max-width:520px">
+    <button class="btn raise" data-f3op="c1" type="button">ĉ<sup>†</sup><sub>1</sub></button>
+    <button class="btn raise" data-f3op="c2" type="button">ĉ<sup>†</sup><sub>2</sub></button>
+    <button class="btn raise" data-f3op="c3" type="button">ĉ<sup>†</sup><sub>3</sub></button>
+    <button class="btn lower" data-f3op="d1" type="button">ĉ<sub>1</sub></button>
+    <button class="btn lower" data-f3op="d2" type="button">ĉ<sub>2</sub></button>
+    <button class="btn lower" data-f3op="d3" type="button">ĉ<sub>3</sub></button>
+  </div>
+  <div class="row" style="margin-top:10px; max-width:700px">
+    <button class="btn" id="f3Apply" type="button">Apply (ψ ← ψ′)</button>
+    <button class="btn ghost" id="f3Vac" type="button">|000⟩</button>
+    <button class="btn ghost" id="f3Full" type="button">|111⟩</button>
+    <button class="btn ghost" id="f3W" type="button">W: |100⟩+|010⟩+|001⟩</button>
+  </div>
+  <canvas id="f3Slots" width="900" height="150" style="margin-top:12px"></canvas>
+  <p class="hint">Three orbitals ("slots"). A particle's opacity = ⟨n<sub>j</sub>⟩ in the current state; Apply animates the particle appearing or vanishing in the acted mode.</p>
+  <div class="stat-line" style="max-width:520px; margin-top:10px"><span>⟨n₁⟩ ⟨n₂⟩ ⟨n₃⟩ · ‖ψ‖²</span><b id="f3Occ"></b></div>
+  <p class="hint" id="f3Msg"></p>
+</div>
+<div class="panel" style="margin-top:20px; max-width: 940px;">
+  <h2>Jordan–Wigner factorization of the selected operator</h2>
+  <div class="ladder-box" id="f3JW"></div>
+  <h2 style="margin-top:14px">Anticommutation relations, computed from the matrices</h2>
+  <div id="f3Anti"></div>
+  <p class="hint">Entries show the 8×8 result: I = identity, 0 = zero matrix. {ĉ<sub>i</sub>, ĉ<sup>†</sup><sub>j</sub>} = δ<sub>ij</sub>, all others vanish.</p>
 </div>
 </section>
 
@@ -1736,11 +1956,534 @@
     });
   }
 
+  // ================================================================
+  // Tab 3: single oscillator with an added quartic term, lambda * x^4
+  //
+  // H = p^2/2 + x^2/2 + lambda*x^4. This no longer has closed-form eigenstates, so instead of
+  // hermite()/psi() directly giving eigenfunctions (as in tab 1), we diagonalize H inside the
+  // truncated harmonic-oscillator basis |0>..|NMAX> and expand the true eigenstates as mixtures
+  // of that basis's psi(k,x). x^4's matrix elements are built by squaring the tridiagonal x
+  // matrix twice, rather than hand-deriving the closed-form <n|x^4|m> formula.
+  // ================================================================
+  function buildXMatrix(dim) {
+    const X = Array.from({ length: dim }, () => new Array(dim).fill(0));
+    for (let n = 0; n < dim - 1; n++) {
+      const val = Math.sqrt(n + 1) / Math.SQRT2;
+      X[n][n + 1] = val;
+      X[n + 1][n] = val;
+    }
+    return X;
+  }
+
+  function matMul(A, B) {
+    const n = A.length;
+    const C = Array.from({ length: n }, () => new Array(n).fill(0));
+    for (let i = 0; i < n; i++) {
+      for (let k = 0; k < n; k++) {
+        const aik = A[i][k];
+        if (aik === 0) continue;
+        for (let j = 0; j < n; j++) C[i][j] += aik * B[k][j];
+      }
+    }
+    return C;
+  }
+
+  const xMat = buildXMatrix(DIM);
+  const x2Mat = matMul(xMat, xMat);
+  const x4Mat = matMul(x2Mat, x2Mat);
+
+  // Classic cyclic Jacobi eigenvalue algorithm for a real symmetric matrix — plenty for a 10x10.
+  function jacobiEigenDecomposition(Ain) {
+    const n = Ain.length;
+    const a = Ain.map((row) => row.slice());
+    const v = Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+
+    function rotate(p, q) {
+      if (Math.abs(a[p][q]) < 1e-14) return;
+      const theta = (a[q][q] - a[p][p]) / (2 * a[p][q]);
+      const t = (theta >= 0 ? 1 : -1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+      const c = 1 / Math.sqrt(t * t + 1);
+      const s = t * c;
+      const tau = s / (1 + c);
+      const h = t * a[p][q];
+      a[p][p] -= h;
+      a[q][q] += h;
+      a[p][q] = 0;
+      a[q][p] = 0;
+      for (let i = 0; i < n; i++) {
+        if (i !== p && i !== q) {
+          const g = a[i][p], hh = a[i][q];
+          a[i][p] = g - s * (hh + tau * g);
+          a[p][i] = a[i][p];
+          a[i][q] = hh + s * (g - tau * hh);
+          a[q][i] = a[i][q];
+        }
+      }
+      for (let i = 0; i < n; i++) {
+        const g = v[i][p], hh = v[i][q];
+        v[i][p] = g - s * (hh + tau * g);
+        v[i][q] = hh + s * (g - tau * hh);
+      }
+    }
+
+    for (let sweep = 0; sweep < 60; sweep++) {
+      let off = 0;
+      for (let p = 0; p < n; p++) for (let q = p + 1; q < n; q++) off += a[p][q] * a[p][q];
+      if (off < 1e-24) break;
+      for (let p = 0; p < n - 1; p++) for (let q = p + 1; q < n; q++) rotate(p, q);
+    }
+
+    const eigenvalues = a.map((row, i) => row[i]);
+    const order = eigenvalues.map((_, i) => i).sort((i, j) => eigenvalues[i] - eigenvalues[j]);
+    const values = order.map((i) => eigenvalues[i]);
+    const vectors = Array.from({ length: n }, () => new Array(n));
+    for (let newIdx = 0; newIdx < n; newIdx++) {
+      const oldIdx = order[newIdx];
+      let maxAbs = 0, maxK = 0;
+      for (let k = 0; k < n; k++) if (Math.abs(v[k][oldIdx]) > maxAbs) { maxAbs = Math.abs(v[k][oldIdx]); maxK = k; }
+      const flip = v[maxK][oldIdx] < 0 ? -1 : 1;
+      for (let k = 0; k < n; k++) vectors[k][newIdx] = flip * v[k][oldIdx];
+    }
+    return { values, vectors };
+  }
+
+  function quarticPotential(x, lambda) { return (x * x) / 2 + lambda * x * x * x * x; }
+
+  // Turning point: solve lambda*u^2 + 0.5*u - E = 0 for u = A^2 (quadratic formula), A = sqrt(u).
+  function turningPoint(E, lambda) {
+    if (lambda < 1e-9) return Math.sqrt(Math.max(0, 2 * E));
+    const disc = 0.25 + 4 * lambda * E;
+    const u = (-0.5 + Math.sqrt(Math.max(0, disc))) / (2 * lambda);
+    return Math.sqrt(Math.max(0, u));
+  }
+
+  const canvasQB = document.getElementById("qPanelB");
+  const ctxQB = canvasQB.getContext("2d");
+  const canvasQA = document.getElementById("qPanelA");
+  const ctxQA = canvasQA.getContext("2d");
+  const canvasQM = document.getElementById("qMatrixPanel");
+  const ctxQM = canvasQM.getContext("2d");
+
+  const qLambdaSlider = document.getElementById("qLambdaSlider");
+  const qLambdaLabel = document.getElementById("qLambdaLabel");
+  const qNSlider = document.getElementById("qNSlider");
+  const qNLabel = document.getElementById("qNLabel");
+  const qELabel = document.getElementById("qELabel");
+  const qESHOLabel = document.getElementById("qESHOLabel");
+  const qALabel = document.getElementById("qALabel");
+  const qXLabel = document.getElementById("qXLabel");
+  const qBtnDown = document.getElementById("qBtnDown");
+  const qBtnUp = document.getElementById("qBtnUp");
+  const qBtnPlay = document.getElementById("qBtnPlay");
+  const qBtnReset = document.getElementById("qBtnReset");
+
+  const qState = {
+    lambda: 0.3,
+    n: 0,
+    A: 1,
+    Astart: 1,
+    Aend: 1,
+    tweenT: 1,
+    tweenDur: 0.55,
+    theta: Math.PI / 2,
+    omegaDisplay: 1.5,
+    running: true,
+    mode: "psi"
+  };
+
+  let quarticSpectrum = null; // { values: [E0..E9], vectors: DIMxDIM, column n = eigenstate n's coeffs }
+  let quarticHmat = null;
+
+  function qCurrentActualA() {
+    if (qState.tweenT >= 1) return qState.Aend;
+    return lerp(qState.Astart, qState.Aend, easeOutCubic(qState.tweenT));
+  }
+
+  function recomputeQuarticSpectrum() {
+    const H = Array.from({ length: DIM }, () => new Array(DIM).fill(0));
+    for (let i = 0; i < DIM; i++) {
+      H[i][i] = i + 0.5;
+      for (let j = 0; j < DIM; j++) H[i][j] += qState.lambda * x4Mat[i][j];
+    }
+    quarticHmat = H;
+    quarticSpectrum = jacobiEigenDecomposition(H);
+  }
+
+  function updateQuarticInfoLabels(xCurrent) {
+    qNLabel.textContent = qState.n;
+    qELabel.textContent = quarticSpectrum.values[qState.n].toFixed(3);
+    qESHOLabel.textContent = (qState.n + 0.5).toFixed(3);
+    qALabel.textContent = turningPoint(quarticSpectrum.values[qState.n], qState.lambda).toFixed(3);
+    qXLabel.textContent = xCurrent.toFixed(3);
+    qNSlider.value = qState.n;
+    qBtnDown.disabled = qState.n === 0;
+    qBtnUp.disabled = qState.n === NMAX;
+  }
+
+  function setQuarticN(newN) {
+    newN = Math.max(0, Math.min(NMAX, newN));
+    qState.Astart = qCurrentActualA();
+    qState.n = newN;
+    qState.Aend = turningPoint(quarticSpectrum.values[newN], qState.lambda);
+    qState.tweenT = 0;
+  }
+
+  function setQuarticLambda(newLambda) {
+    qState.Astart = qCurrentActualA();
+    qState.lambda = newLambda;
+    recomputeQuarticSpectrum();
+    qState.Aend = turningPoint(quarticSpectrum.values[qState.n], newLambda);
+    qState.tweenT = 0;
+    qLambdaLabel.textContent = newLambda.toFixed(2);
+  }
+
+  function resetQuarticDemo() {
+    qState.lambda = 0.3;
+    qState.n = 0;
+    qState.theta = Math.PI / 2;
+    qState.running = true;
+    qLambdaSlider.value = "0.3";
+    qLambdaLabel.textContent = "0.30";
+    qNSlider.value = "0";
+    recomputeQuarticSpectrum();
+    qState.A = turningPoint(quarticSpectrum.values[0], qState.lambda);
+    qState.Astart = qState.A;
+    qState.Aend = qState.A;
+    qState.tweenT = 1;
+    qBtnPlay.textContent = "⏸ Pause";
+  }
+
+  qLambdaSlider.addEventListener("input", () => setQuarticLambda(parseFloat(qLambdaSlider.value)));
+  qNSlider.addEventListener("input", () => setQuarticN(parseInt(qNSlider.value, 10)));
+  qBtnDown.addEventListener("click", () => { if (qState.n > 0) setQuarticN(qState.n - 1); });
+  qBtnUp.addEventListener("click", () => { if (qState.n < NMAX) setQuarticN(qState.n + 1); });
+  document.querySelectorAll('input[name="qmode"]').forEach((el) => {
+    el.addEventListener("change", (e) => { if (e.target.checked) qState.mode = e.target.value; });
+  });
+  qBtnPlay.addEventListener("click", () => {
+    qState.running = !qState.running;
+    qBtnPlay.textContent = qState.running ? "⏸ Pause" : "▶ Play";
+  });
+  qBtnReset.addEventListener("click", resetQuarticDemo);
+
+  // Panel geometry (Bw, Bh, anchorX, equilibriumY, pxPerUnitB, ...) and (Aw, Ah, marginL/R/T/B,
+  // plotW, plotH, xToPx) are shared with tab 1 — qPanelB/qPanelA use identical canvas sizes and
+  // the same XMAX, so those constants from the Panel A/B setup above apply unchanged here too.
+  function drawQPanelB(xCurrent) {
+    ctxQB.clearRect(0, 0, Bw, Bh);
+
+    ctxQB.save();
+    ctxQB.strokeStyle = COLOR.baseline;
+    ctxQB.setLineDash([5, 5]);
+    ctxQB.lineWidth = 1;
+    ctxQB.beginPath();
+    ctxQB.moveTo(30, equilibriumY);
+    ctxQB.lineTo(Bw - 30, equilibriumY);
+    ctxQB.stroke();
+    ctxQB.restore();
+    ctxQB.fillStyle = COLOR.muted;
+    ctxQB.font = "11px system-ui, sans-serif";
+    ctxQB.fillText("equilibrium (x = 0)", 34, equilibriumY - 6);
+
+    ctxQB.font = "10px system-ui, sans-serif";
+    let lastLabelY = -Infinity;
+    for (let k = 0; k <= NMAX; k++) {
+      const Ak = turningPoint(quarticSpectrum.values[k], qState.lambda);
+      const isSelected = k === qState.n;
+      [1, -1].forEach((sign) => {
+        const ty = equilibriumY + sign * Ak * pxPerUnitB;
+        if (ty < anchorY + 4 || ty > Bh - bottomMargin - 4) return;
+        ctxQB.beginPath();
+        ctxQB.moveTo(Bw - 30, ty);
+        ctxQB.lineTo(Bw - 20, ty);
+        ctxQB.strokeStyle = isSelected ? COLOR.blue : COLOR.gridline;
+        ctxQB.lineWidth = isSelected ? 2 : 1;
+        ctxQB.stroke();
+        if (sign === 1 && (isSelected || Math.abs(ty - lastLabelY) >= 10)) {
+          ctxQB.fillStyle = isSelected ? COLOR.blue : COLOR.muted;
+          ctxQB.fillText("n=" + k, Bw - 18, ty + 3);
+          lastLabelY = ty;
+        }
+      });
+    }
+
+    ctxQB.fillStyle = COLOR.inkSecondary;
+    ctxQB.fillRect(anchorX - 40, anchorY - 8, 80, 8);
+
+    const massY = equilibriumY + xCurrent * pxPerUnitB;
+
+    ctxQB.strokeStyle = COLOR.inkSecondary;
+    ctxQB.lineWidth = 2;
+    drawSpring(ctxQB, anchorX, anchorY, anchorX, massY - massRadius, 11);
+
+    const grad = ctxQB.createRadialGradient(
+      anchorX - massRadius * 0.35, massY - massRadius * 0.35, 2,
+      anchorX, massY, massRadius
+    );
+    grad.addColorStop(0, "#6fa8ec");
+    grad.addColorStop(1, COLOR.blue);
+    ctxQB.beginPath();
+    ctxQB.arc(anchorX, massY, massRadius, 0, Math.PI * 2);
+    ctxQB.fillStyle = grad;
+    ctxQB.fill();
+    ctxQB.lineWidth = 1.5;
+    ctxQB.strokeStyle = COLOR.ink;
+    ctxQB.stroke();
+
+    ctxQB.fillStyle = COLOR.ink;
+    ctxQB.font = "bold 12px system-ui, sans-serif";
+    ctxQB.textAlign = "center";
+    ctxQB.fillText("n=" + qState.n, anchorX, massY + 4);
+    ctxQB.textAlign = "left";
+  }
+
+  function drawQPanelA(xCurrent) {
+    ctxQA.clearRect(0, 0, Aw, Ah);
+
+    const lambda = qState.lambda;
+    const vals = quarticSpectrum.values;
+    const vecs = quarticSpectrum.vectors;
+    const ETOPq = vals[NMAX] + 1.3;
+    const eToPyQuartic = (e) => Ah - marginB - (Math.min(e, ETOPq) / ETOPq) * plotH;
+
+    ctxQA.strokeStyle = COLOR.gridline;
+    ctxQA.lineWidth = 1;
+    ctxQA.beginPath();
+    ctxQA.moveTo(marginL, marginT);
+    ctxQA.lineTo(marginL, Ah - marginB);
+    ctxQA.lineTo(Aw - marginR, Ah - marginB);
+    ctxQA.stroke();
+
+    ctxQA.fillStyle = COLOR.muted;
+    ctxQA.font = "11px system-ui, sans-serif";
+    ctxQA.fillText("E", marginL - 14, marginT + 4);
+    ctxQA.fillText("x", Aw - marginR - 6, Ah - marginB + 16);
+
+    for (let k = -Math.floor(XMAX); k <= Math.floor(XMAX); k++) {
+      const px = xToPx(k);
+      ctxQA.strokeStyle = COLOR.gridline;
+      ctxQA.beginPath();
+      ctxQA.moveTo(px, Ah - marginB);
+      ctxQA.lineTo(px, Ah - marginB + 4);
+      ctxQA.stroke();
+      if (k % 2 === 0) ctxQA.fillText(String(k), px - 3, Ah - marginB + 16);
+    }
+
+    // energy levels: no longer evenly spaced, so each rail gets its own turning-point width
+    for (let lvl = 0; lvl <= NMAX; lvl++) {
+      const e = vals[lvl];
+      const py = eToPyQuartic(e);
+      const isSelected = lvl === qState.n;
+      const A = turningPoint(e, lambda);
+      ctxQA.save();
+      ctxQA.setLineDash(isSelected ? [] : [5, 4]);
+      ctxQA.strokeStyle = isSelected ? COLOR.blue : COLOR.muted;
+      ctxQA.globalAlpha = isSelected ? 0.9 : 0.45;
+      ctxQA.lineWidth = isSelected ? 2 : 1;
+      const xL = xToPx(-A), xR = xToPx(A);
+      ctxQA.beginPath();
+      ctxQA.moveTo(xL, py);
+      ctxQA.lineTo(xR, py);
+      ctxQA.stroke();
+      ctxQA.restore();
+
+      ctxQA.fillStyle = isSelected ? COLOR.blue : COLOR.muted;
+      ctxQA.font = isSelected ? "bold 11px system-ui, sans-serif" : "10px system-ui, sans-serif";
+      ctxQA.fillText("n=" + lvl, xR + 4, py + 3);
+    }
+
+    // dashed plain-SHO parabola, for comparison against the solid current V(x)
+    ctxQA.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const x = -XMAX + (2 * XMAX * i) / 200;
+      const py = eToPyQuartic((x * x) / 2);
+      const px = xToPx(x);
+      if (i === 0) ctxQA.moveTo(px, py); else ctxQA.lineTo(px, py);
+    }
+    ctxQA.save();
+    ctxQA.setLineDash([4, 4]);
+    ctxQA.strokeStyle = COLOR.muted;
+    ctxQA.globalAlpha = 0.55;
+    ctxQA.lineWidth = 1.5;
+    ctxQA.stroke();
+    ctxQA.restore();
+
+    ctxQA.beginPath();
+    for (let i = 0; i <= 200; i++) {
+      const x = -XMAX + (2 * XMAX * i) / 200;
+      const py = eToPyQuartic(quarticPotential(x, lambda));
+      const px = xToPx(x);
+      if (i === 0) ctxQA.moveTo(px, py); else ctxQA.lineTo(px, py);
+    }
+    ctxQA.strokeStyle = COLOR.baseline;
+    ctxQA.lineWidth = 2;
+    ctxQA.stroke();
+
+    const An = turningPoint(vals[qState.n], lambda);
+    ctxQA.save();
+    ctxQA.setLineDash([3, 3]);
+    ctxQA.strokeStyle = COLOR.muted;
+    ctxQA.globalAlpha = 0.6;
+    [-An, An].forEach((xt) => {
+      const px = xToPx(xt);
+      ctxQA.beginPath();
+      ctxQA.moveTo(px, marginT);
+      ctxQA.lineTo(px, Ah - marginB);
+      ctxQA.stroke();
+    });
+    ctxQA.restore();
+
+    // wavefunction: superposition of the harmonic basis, psi_n(x) = sum_k V[k][n] * phi_k(x)
+    const baseE = vals[qState.n];
+    const baseline = eToPyQuartic(baseE);
+    const N_SAMPLES = 260;
+    const samples = [];
+    let maxAbs = 1e-9;
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      let v = 0;
+      for (let k = 0; k <= NMAX; k++) v += vecs[k][qState.n] * psi(k, x);
+      if (qState.mode === "psi2") v = v * v;
+      samples.push(v);
+      if (Math.abs(v) > maxAbs) maxAbs = Math.abs(v);
+    }
+    const scale = 0.42 / maxAbs;
+
+    ctxQA.beginPath();
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      const py = eToPyQuartic(baseE + samples[i] * scale);
+      const px = xToPx(x);
+      if (i === 0) ctxQA.moveTo(px, py); else ctxQA.lineTo(px, py);
+    }
+    for (let i = N_SAMPLES; i >= 0; i--) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      ctxQA.lineTo(xToPx(x), baseline);
+    }
+    ctxQA.closePath();
+    ctxQA.fillStyle = COLOR.blue;
+    ctxQA.globalAlpha = 0.18;
+    ctxQA.fill();
+    ctxQA.globalAlpha = 1;
+
+    ctxQA.beginPath();
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const x = -XMAX + (2 * XMAX * i) / N_SAMPLES;
+      const py = eToPyQuartic(baseE + samples[i] * scale);
+      const px = xToPx(x);
+      if (i === 0) ctxQA.moveTo(px, py); else ctxQA.lineTo(px, py);
+    }
+    ctxQA.strokeStyle = COLOR.blue;
+    ctxQA.lineWidth = 2.2;
+    ctxQA.stroke();
+
+    const markerPx = xToPx(Math.max(-XMAX, Math.min(XMAX, xCurrent)));
+    ctxQA.beginPath();
+    ctxQA.arc(markerPx, baseline, 6, 0, Math.PI * 2);
+    ctxQA.fillStyle = COLOR.orange;
+    ctxQA.fill();
+    ctxQA.lineWidth = 1.5;
+    ctxQA.strokeStyle = COLOR.ink;
+    ctxQA.stroke();
+  }
+
+  // Reuses DIM/opCell/opGridPx from the shared a-hat/a-hat-dagger matrix section above: a Hmat
+  // heatmap on the left (banded from x^4's parity-preserving coupling), plus a bar chart on the
+  // right of |<k|n>|^2 showing how the true eigenstate n mixes several harmonic basis states.
+  function drawQMatrixPanel(n, Hmat, vectors) {
+    const w = canvasQM.width;
+    ctxQM.clearRect(0, 0, w, canvasQM.height);
+
+    const gridY0 = 46;
+    const matX0 = 54;
+
+    ctxQM.fillStyle = COLOR.inkSecondary;
+    ctxQM.font = "13px system-ui, sans-serif";
+    ctxQM.fillText("Ĥ in basis |0⟩…|9⟩ (|⟨i|Ĥ|j⟩| heatmap)", matX0, gridY0 - 26);
+
+    ctxQM.fillStyle = COLOR.muted;
+    ctxQM.font = "10px system-ui, sans-serif";
+    ctxQM.textAlign = "center";
+    for (let c = 0; c < DIM; c++) ctxQM.fillText(String(c), matX0 + c * opCell + opCell / 2, gridY0 - 6);
+    ctxQM.textAlign = "right";
+    for (let r = 0; r < DIM; r++) ctxQM.fillText(String(r), matX0 - 6, gridY0 + r * opCell + opCell / 2 + 3);
+    ctxQM.textAlign = "left";
+
+    ctxQM.strokeStyle = COLOR.gridline;
+    ctxQM.lineWidth = 1;
+    for (let i = 0; i <= DIM; i++) {
+      ctxQM.beginPath(); ctxQM.moveTo(matX0, gridY0 + i * opCell); ctxQM.lineTo(matX0 + opGridPx, gridY0 + i * opCell); ctxQM.stroke();
+      ctxQM.beginPath(); ctxQM.moveTo(matX0 + i * opCell, gridY0); ctxQM.lineTo(matX0 + i * opCell, gridY0 + opGridPx); ctxQM.stroke();
+    }
+
+    let maxAbsH = 1e-9;
+    for (let i = 0; i < DIM; i++) for (let j = 0; j < DIM; j++) if (Math.abs(Hmat[i][j]) > maxAbsH) maxAbsH = Math.abs(Hmat[i][j]);
+    for (let i = 0; i < DIM; i++) {
+      for (let j = 0; j < DIM; j++) {
+        const v = Math.abs(Hmat[i][j]);
+        if (v < 1e-9) continue;
+        ctxQM.fillStyle = COLOR.blue;
+        ctxQM.globalAlpha = 0.12 + 0.85 * (v / maxAbsH);
+        ctxQM.fillRect(matX0 + j * opCell, gridY0 + i * opCell, opCell, opCell);
+        ctxQM.globalAlpha = 1;
+      }
+    }
+
+    const barX0 = matX0 + opGridPx + 80;
+    const barPlotW = w - barX0 - 20;
+    const barPlotH = opGridPx;
+    const barSlot = barPlotW / DIM;
+
+    ctxQM.fillStyle = COLOR.inkSecondary;
+    ctxQM.font = "13px system-ui, sans-serif";
+    ctxQM.fillText("|⟨k|n=" + n + "⟩|² — basis mixture of this eigenstate", barX0, gridY0 - 26);
+
+    ctxQM.strokeStyle = COLOR.gridline;
+    ctxQM.lineWidth = 1;
+    ctxQM.beginPath();
+    ctxQM.moveTo(barX0, gridY0);
+    ctxQM.lineTo(barX0, gridY0 + barPlotH);
+    ctxQM.lineTo(barX0 + barPlotW, gridY0 + barPlotH);
+    ctxQM.stroke();
+
+    for (let k = 0; k < DIM; k++) {
+      const weight = vectors[k][n] * vectors[k][n];
+      const bh = weight * barPlotH;
+      const bx = barX0 + k * barSlot + barSlot * 0.18;
+      const bw = barSlot * 0.64;
+      const by = gridY0 + barPlotH - bh;
+      ctxQM.fillStyle = COLOR.orange;
+      ctxQM.globalAlpha = 0.3 + 0.65 * weight;
+      ctxQM.fillRect(bx, by, bw, Math.max(bh, 1));
+      ctxQM.globalAlpha = 1;
+      ctxQM.fillStyle = COLOR.muted;
+      ctxQM.font = "10px system-ui, sans-serif";
+      ctxQM.textAlign = "center";
+      ctxQM.fillText(String(k), bx + bw / 2, gridY0 + barPlotH + 14);
+      if (weight > 0.02) ctxQM.fillText((weight * 100).toFixed(0) + "%", bx + bw / 2, by - 4);
+      ctxQM.textAlign = "left";
+    }
+  }
+
+  function updateAndDrawQuartic(dt) {
+    if (qState.tweenT < 1) {
+      qState.tweenT = Math.min(1, qState.tweenT + dt / qState.tweenDur);
+      qState.A = lerp(qState.Astart, qState.Aend, easeOutCubic(qState.tweenT));
+    }
+    if (qState.running) qState.theta += qState.omegaDisplay * dt;
+
+    const xCurrent = qState.A * Math.cos(qState.theta);
+
+    drawQPanelB(xCurrent);
+    drawQPanelA(xCurrent);
+    drawQMatrixPanel(qState.n, quarticHmat, quarticSpectrum.vectors);
+    updateQuarticInfoLabels(xCurrent);
+  }
+
   // ---------- Tab switching ----------
   let activeTab = "single";
   const tabButtons = document.querySelectorAll(".tab-btn");
-  const tabPageSingle = document.getElementById("tab-single");
-  const tabPageChain = document.getElementById("tab-chain");
+  const tabPages = document.querySelectorAll(".tab-page");
 
   tabButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1748,9 +2491,10 @@
       if (tab === activeTab) return;
       activeTab = tab;
       tabButtons.forEach((b) => b.classList.toggle("active", b === btn));
-      tabPageSingle.classList.toggle("active", tab === "single");
-      tabPageChain.classList.toggle("active", tab === "chain");
-      if (tab === "single") resetSingleDemo(); else resetChainDemo();
+      tabPages.forEach((pg) => pg.classList.toggle("active", pg.id === "tab-" + tab));
+      if (tab === "single") resetSingleDemo();
+      else if (tab === "chain") resetChainDemo();
+      else if (tab === "quartic") resetQuarticDemo();
     });
   });
 
@@ -1762,7 +2506,8 @@
     lastFrameTime = ts;
 
     if (activeTab === "single") updateAndDrawSingle(dt);
-    else updateAndDrawChain(dt);
+    else if (activeTab === "chain") updateAndDrawChain(dt);
+    else if (activeTab === "quartic") updateAndDrawQuartic(dt);
 
     requestAnimationFrame(frame);
   }
@@ -1770,7 +2515,455 @@
   updateLadderText(0);
   updateInfoLabels(0, amplitudeOf(0) * Math.cos(state.theta));
   resetChainDemo();
+  resetQuarticDemo();
   requestAnimationFrame(frame);
+})();
+</script>
+<script>
+// Second-quantization tabs (event-driven rendering; no animation loop needed).
+(function () {
+  "use strict";
+  const C = { surface: "#1a1a19", ink: "#ffffff", sec: "#c3c2b7", muted: "#898781", grid: "#2c2c2a",
+              blue: "#3987e5", orange: "#d95926", aqua: "#199e70" };
+  const toastEl = document.getElementById("toast");
+  let toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg; toastEl.classList.add("show");
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => toastEl.classList.remove("show"), 2000);
+  }
+  const sgn = (v) => (v < 0 ? "−" : "+");
+
+  // =====================================================================
+  // Tab 4: 4x4 lattice, 16 modes, general sparse Fock-space state
+  // =====================================================================
+  const L = 4, M = L * L, NCAP = 3;
+  const modeXY = (i) => [i % L, Math.floor(i / L)];
+  const modeLabel = (i) => { const [x, y] = modeXY(i); return `(${x},${y})`; };
+
+  const cPos = document.getElementById("fpPos"), cMom = document.getElementById("fpMom");
+  const gPos = cPos.getContext("2d"), gMom = cMom.getContext("2d");
+  const CELL = 68, OX = 36, OY = 12;
+
+  let fermion = false, basis = "pos", sel = 0;
+  let psi = new Map(); // key -> {n: occupation array, re, im}
+  let history = [];
+
+  function vacuum() { const m = new Map(); const n = new Array(M).fill(0); m.set(n.join(""), { n, re: 1, im: 0 }); return m; }
+  function addTerm(map, n, re, im) {
+    const k = n.join(""); const t = map.get(k);
+    if (t) { t.re += re; t.im += im; } else map.set(k, { n, re, im });
+  }
+  // Apply single-mode operator (creation if dagger) with the bosonic or fermionic rule.
+  function applyMode(state, m, dagger) {
+    const out = new Map();
+    for (const t of state.values()) {
+      const n = t.n.slice(); let f = 1;
+      if (dagger) {
+        if (fermion) {
+          if (n[m] === 1) continue;
+          let par = 0; for (let i = 0; i < m; i++) par += n[i];
+          if (par % 2) f = -1; n[m] = 1;
+        } else { f = Math.sqrt(n[m] + 1); n[m]++; }
+      } else {
+        if (n[m] === 0) continue;
+        if (fermion) { let par = 0; for (let i = 0; i < m; i++) par += n[i]; if (par % 2) f = -1; n[m] = 0; }
+        else { f = Math.sqrt(n[m]); n[m]--; }
+      }
+      addTerm(out, n, t.re * f, t.im * f);
+    }
+    return out;
+  }
+  // Mode expansion coefficients: a†_k = (1/L) Σ_r e^{+ik·r} a†_r ; a_k = (1/L) Σ_r e^{-ik·r} a_r
+  function coeffs(b, idx, dagger) {
+    const co = [];
+    if (b === "pos") { for (let r = 0; r < M; r++) co.push(r === idx ? [1, 0] : [0, 0]); return co; }
+    const [mx, my] = modeXY(idx);
+    for (let r = 0; r < M; r++) {
+      const [x, y] = modeXY(r);
+      const ph = (2 * Math.PI / L) * (mx * x + my * y) * (dagger ? 1 : -1);
+      co.push([Math.cos(ph) / L, Math.sin(ph) / L]);
+    }
+    return co;
+  }
+  function applyOp(state, b, idx, dagger) {
+    const out = new Map(); const co = coeffs(b, idx, dagger);
+    for (let r = 0; r < M; r++) {
+      const [cr, ci] = co[r]; if (cr === 0 && ci === 0) continue;
+      for (const t of applyMode(state, r, dagger).values())
+        addTerm(out, t.n, cr * t.re - ci * t.im, cr * t.im + ci * t.re);
+    }
+    for (const [k, t] of out) if (t.re * t.re + t.im * t.im < 1e-24) out.delete(k);
+    return out;
+  }
+  const norm2 = (st) => { let s = 0; for (const t of st.values()) s += t.re * t.re + t.im * t.im; return s; };
+  const totalN = (n) => n.reduce((a, v) => a + v, 0);
+
+  function fmtAmp(re, im) {
+    const r = Math.abs(re) < 5e-4 ? 0 : re, i = Math.abs(im) < 5e-4 ? 0 : im;
+    if (i === 0) return `${sgn(r)}${Math.abs(r).toFixed(3)}`;
+    if (r === 0) return `${sgn(i)}${Math.abs(i).toFixed(3)}i`;
+    return `(${r.toFixed(3)}${sgn(i)}${Math.abs(i).toFixed(3)}i)`;
+  }
+  function ketLabel(n) {
+    let s = "";
+    for (let i = 0; i < M; i++) if (n[i]) s += modeLabel(i) + (n[i] > 1 ? "^" + n[i] : "");
+    return s ? `|${s}⟩` : "|0⟩ (vacuum)";
+  }
+
+  function drawGrid(g, canvas, dens, amps, isSel) {
+    g.clearRect(0, 0, canvas.width, canvas.height);
+    for (let r = 0; r < M; r++) {
+      const [x, y] = modeXY(r);
+      const px = OX + x * CELL, py = OY + (L - 1 - y) * CELL; // y increases upward
+      g.fillStyle = C.grid; g.fillRect(px, py, CELL - 2, CELL - 2);
+      const a = Math.sqrt(Math.min(1, dens[r]));
+      g.fillStyle = C.blue; g.globalAlpha = 0.08 + 0.87 * a; g.fillRect(px, py, CELL - 2, CELL - 2); g.globalAlpha = 1;
+      g.fillStyle = C.ink; g.font = "11px system-ui, sans-serif"; g.textAlign = "center";
+      g.fillText(dens[r].toFixed(2), px + CELL / 2 - 1, py + CELL - 8);
+      if (amps) {
+        const [re, im] = amps[r]; const mag = Math.hypot(re, im);
+        if (mag > 1e-6) {
+          const cx = px + CELL / 2 - 1, cy = py + CELL / 2 - 8, len = Math.min(1, mag * 1.2) * 20;
+          const dx = (re / mag) * len, dy = -(im / mag) * len;
+          g.strokeStyle = C.orange; g.lineWidth = 2; g.beginPath();
+          g.moveTo(cx - dx / 2, cy - dy / 2); g.lineTo(cx + dx / 2, cy + dy / 2); g.stroke();
+          g.fillStyle = C.orange; g.beginPath(); g.arc(cx + dx / 2, cy + dy / 2, 3, 0, 7); g.fill();
+        }
+      }
+      if (isSel && r === sel) { g.strokeStyle = C.orange; g.lineWidth = 3; g.strokeRect(px + 1, py + 1, CELL - 4, CELL - 4); }
+    }
+    g.fillStyle = C.muted; g.font = "10px system-ui, sans-serif";
+    for (let i = 0; i < L; i++) {
+      g.textAlign = "center"; g.fillText(String(i), OX + i * CELL + CELL / 2 - 1, OY + L * CELL + 12);
+      g.textAlign = "right"; g.fillText(String(i), OX - 8, OY + (L - 1 - i) * CELL + CELL / 2 + 3);
+    }
+    g.textAlign = "center"; g.fillText("x (m_x)", OX + (L * CELL) / 2, OY + L * CELL + 26);
+    g.textAlign = "left";
+  }
+
+
+  // ---- particle box rendering ----
+  const cBox = document.getElementById("fpBox"), gBox = cBox.getContext("2d");
+  const BX = 24, BY = 18, BS = 272, BC = BS / L;
+  let dots = [], ghosts = [], lastDpos = new Array(M).fill(0), lastDmom = new Array(M).fill(0);
+  const pick = (w) => { let tot = w.reduce((a, v) => a + v, 0), r = Math.random() * tot; for (let i = 0; i < w.length; i++) { r -= w[i]; if (r <= 0) return i; } return w.length - 1; };
+  const toPx = (x, y) => [BX + x * BC, BY + (L - y) * BC];
+  function resample(kind) {
+    const old = dots;
+    dots = [];
+    const nrm = norm2(psi);
+    if (nrm > 1e-12) {
+      const terms = [...psi.values()];
+      const N = totalN(terms[pick(terms.map((t) => t.re * t.re + t.im * t.im))].n);
+      for (let q = 0; q < N; q++) {
+        const r = pick(lastDpos.map((v) => v + 1e-9)), k = pick(lastDmom.map((v) => v + 1e-9));
+        const [x, y] = modeXY(r), [mx, my] = modeXY(k);
+        const sx = mx > 2 ? mx - 4 : mx, sy = my > 2 ? my - 4 : my;
+        const sp = 0.55 * (2 * Math.PI / L);
+        dots.push({ x: x + Math.random(), y: y + Math.random(), vx: sx * sp, vy: sy * sp, ring: kind === "create" && q >= old.length ? 1 : 0 });
+      }
+    }
+    ghosts = [];
+    if (kind === "destroy") for (let q = dots.length; q < old.length; q++) ghosts.push({ x: old[q].x, y: old[q].y, a: 1 });
+    if (kind === "reset") for (const d of old) ghosts.push({ x: d.x, y: d.y, a: 1 });
+  }
+  function refresh(kind) { renderOne(); resample(kind); }
+  function drawBox(dt) {
+    const g = gBox; g.clearRect(0, 0, cBox.width, cBox.height);
+    for (let r = 0; r < M; r++) {
+      const [x, y] = modeXY(r), [px, py] = toPx(x, y + 1);
+      g.fillStyle = C.blue; g.globalAlpha = 0.06 + 0.3 * Math.sqrt(Math.min(1, lastDpos[r])); g.fillRect(px, py, BC - 1, BC - 1); g.globalAlpha = 1;
+    }
+    g.strokeStyle = C.muted; g.lineWidth = 2; g.strokeRect(BX, BY, BS, BS);
+    const col = fermion ? C.aqua : C.blue;
+    for (const d of dots) {
+      d.x = (d.x + d.vx * dt + L) % L; d.y = (d.y + d.vy * dt + L) % L;
+      const [px, py] = toPx(d.x, d.y);
+      g.strokeStyle = col; g.globalAlpha = 0.35; g.lineWidth = 2; g.beginPath(); g.moveTo(px, py); g.lineTo(px - d.vx * 10, py + d.vy * 10); g.stroke(); g.globalAlpha = 1;
+      g.fillStyle = col; g.beginPath(); g.arc(px, py, 7, 0, 7); g.fill();
+      g.strokeStyle = C.ink; g.lineWidth = 1.5; g.stroke();
+      if (d.ring > 0) { g.strokeStyle = C.orange; g.globalAlpha = d.ring; g.lineWidth = 2; g.beginPath(); g.arc(px, py, 7 + (1 - d.ring) * 30, 0, 7); g.stroke(); g.globalAlpha = 1; d.ring = Math.max(0, d.ring - dt * 1.5); }
+    }
+    for (const gh of ghosts) {
+      const [px, py] = toPx(gh.x, gh.y);
+      g.strokeStyle = C.orange; g.globalAlpha = gh.a; g.lineWidth = 2; g.beginPath(); g.arc(px, py, 7 + (1 - gh.a) * 16, 0, 7); g.stroke(); g.globalAlpha = 1;
+      gh.a -= dt * 1.2;
+    }
+    ghosts = ghosts.filter((gh) => gh.a > 0);
+    g.fillStyle = C.sec; g.font = "12px system-ui, sans-serif"; g.textAlign = "center";
+    g.fillText(`${dots.length} particle${dots.length === 1 ? "" : "s"} (${fermion ? "fermions" : "bosons"})`, BX + BS / 2, BY + BS + 20); g.textAlign = "left";
+  }
+
+  const opName = (dag) => (fermion ? "ĉ" : "â") + (dag ? "†" : "");
+  const opSub = () => (basis === "pos" ? "r=" : "k=") + modeLabel(sel);
+
+  function renderOne() {
+    const nrm = norm2(psi);
+    const dpos = new Array(M).fill(0), dmom = new Array(M).fill(0);
+    let Nexp = 0, onlyOne = nrm > 1e-12;
+    const ampPos = new Array(M).fill(null).map(() => [0, 0]), ampMom = new Array(M).fill(null).map(() => [0, 0]);
+    if (nrm > 1e-12) {
+      for (const t of psi.values()) {
+        const p = (t.re * t.re + t.im * t.im) / nrm, N = totalN(t.n);
+        Nexp += p * N; if (N !== 1) onlyOne = false;
+        for (let r = 0; r < M; r++) dpos[r] += p * t.n[r];
+        if (N === 1) { const r = t.n.indexOf(1); ampPos[r] = [t.re / Math.sqrt(nrm), t.im / Math.sqrt(nrm)]; }
+      }
+      const vacKey = new Array(M).fill(0).join("");
+      for (let k = 0; k < M; k++) {
+        const ak = applyOp(psi, "mom", k, false);
+        dmom[k] = norm2(ak) / nrm;
+        const v = ak.get(vacKey); if (v) ampMom[k] = [v.re / Math.sqrt(nrm), v.im / Math.sqrt(nrm)];
+      }
+    }
+    lastDpos = dpos; lastDmom = dmom;
+    drawGrid(gPos, cPos, dpos, onlyOne ? ampPos : null, basis === "pos");
+    drawGrid(gMom, cMom, dmom, onlyOne ? ampMom : null, basis === "mom");
+
+    document.getElementById("fpSel").textContent = (basis === "pos" ? "position " : "momentum m=") + modeLabel(sel);
+    document.getElementById("fpCreate").innerHTML = `${opName(true)}<sub>${opSub()}</sub>  create`;
+    document.getElementById("fpDestroy").innerHTML = `${opName(false)}<sub>${opSub()}</sub>  destroy`;
+    document.getElementById("fpN").textContent = Nexp.toFixed(2);
+    document.getElementById("fpNorm2").textContent = nrm.toFixed(3);
+
+    const terms = [...psi.values()].sort((a, b) => (b.re * b.re + b.im * b.im) - (a.re * a.re + a.im * a.im));
+    let ket = terms.length ? "" : "0   (zero vector — annihilated)";
+    terms.slice(0, 10).forEach((t) => { ket += `${fmtAmp(t.re, t.im)} ${ketLabel(t.n)}\n`; });
+    if (terms.length > 10) ket += `… +${terms.length - 10} more terms`;
+    document.getElementById("fpKet").textContent = ket.trimEnd();
+    document.getElementById("fpHist").textContent = history.slice(-6).join("\n") || "(none)";
+
+    const sub = `<sub>${opSub()}</sub>`;
+    let h = `Selected: <span class="eq">${opName(true)}${sub}</span> / <span class="eq">${opName(false)}${sub}</span>. `;
+    h += basis === "pos"
+      ? `Position basis: ${opName(true)}<sub>r</sub>|0⟩ = |r⟩, a particle localized on site ${modeLabel(sel)}.`
+      : `Momentum basis: ${opName(true)}<sub>k</sub> = (1/4) Σ<sub>r</sub> e<sup>i k·r</sup> ${opName(true)}<sub>r</sub>, so ${opName(true)}<sub>k</sub>|0⟩ is a plane wave: equal density on all 16 sites, phase winding with k.`;
+    h += fermion
+      ? `<br>Fermions: ĉ<sup>†</sup>ĉ<sup>†</sup> = −ĉ<sup>†</sup>ĉ<sup>†</sup> (reordered), (ĉ<sup>†</sup>)² = 0. Applying ĉ<sup>†</sup> to an occupied mode gives 0; signs come from the number of occupied modes before it in the ordering.`
+      : `<br>Bosons: â<sup>†</sup>|n⟩ = √(n+1)|n+1⟩, â|n⟩ = √n |n−1⟩, [â, â<sup>†</sup>] = 1. Any number of particles may share a mode.`;
+    document.getElementById("fpOpText").innerHTML = h;
+  }
+
+  function doOp(dag) {
+    if (dag && psi.size && [...psi.values()].some((t) => totalN(t.n) >= NCAP)) { toast(`Particle number capped at ${NCAP}`); return; }
+    psi = applyOp(psi, basis, sel, dag);
+    history.push(`${opName(dag)}_${basis === "pos" ? "r" : "k"}${modeLabel(sel)}`);
+    if (!psi.size) toast("Result is the zero vector");
+    refresh(dag ? "create" : "destroy");
+  }
+  function resetOne() { psi = vacuum(); history = []; refresh("reset"); }
+
+  document.getElementById("fpCreate").addEventListener("click", () => doOp(true));
+  document.getElementById("fpDestroy").addEventListener("click", () => doOp(false));
+  document.getElementById("fpReset").addEventListener("click", resetOne);
+  document.getElementById("fpNorm").addEventListener("click", () => {
+    const n = norm2(psi); if (n < 1e-12) return;
+    const s = 1 / Math.sqrt(n); for (const t of psi.values()) { t.re *= s; t.im *= s; }
+    history.push("normalize"); renderOne();
+  });
+  document.querySelectorAll('input[name="fstat"]').forEach((el) => el.addEventListener("change", () => {
+    fermion = el.value === "fermion"; if (el.checked) resetOne();
+  }));
+  document.querySelectorAll('input[name="fbasis"]').forEach((el) => el.addEventListener("change", () => {
+    if (el.checked) { basis = el.value; renderOne(); }
+  }));
+  function pickCell(canvas, b) {
+    canvas.addEventListener("pointerdown", (evt) => {
+      const rect = canvas.getBoundingClientRect();
+      const px = (evt.clientX - rect.left) * (canvas.width / rect.width) - OX;
+      const py = (evt.clientY - rect.top) * (canvas.height / rect.height) - OY;
+      const x = Math.floor(px / CELL), yRow = Math.floor(py / CELL);
+      if (x < 0 || x >= L || yRow < 0 || yRow >= L) return;
+      sel = (L - 1 - yRow) * L + x; basis = b;
+      document.querySelector(`input[name="fbasis"][value="${b}"]`).checked = true;
+      renderOne();
+    });
+  }
+  pickCell(cPos, "pos"); pickCell(cMom, "mom");
+  resetOne();
+
+  // =====================================================================
+  // Tab 5: 3 fermionic modes, 8x8 Jordan-Wigner matrices
+  // =====================================================================
+  const D = 8;
+  const eye = (n) => Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
+  function kron(A, B) {
+    const ra = A.length, rb = B.length, R = Array.from({ length: ra * rb }, () => new Array(ra * rb).fill(0));
+    for (let i = 0; i < ra; i++) for (let j = 0; j < ra; j++)
+      for (let k = 0; k < rb; k++) for (let l = 0; l < rb; l++) R[i * rb + k][j * rb + l] = A[i][j] * B[k][l];
+    return R;
+  }
+  const I2 = eye(2), Z2 = [[1, 0], [0, -1]];
+  const SP = [[0, 0], [1, 0]]; // sigma+ : |0> -> |1>  (basis order |0>,|1>)
+  const SM = [[0, 1], [0, 0]];
+  const T = (A) => A[0].map((_, j) => A.map((row) => row[j]));
+  const mul = (A, B) => A.map((row, i) => B[0].map((_, j) => row.reduce((s, _v, k) => s + A[i][k] * B[k][j], 0)));
+  const add = (A, B) => A.map((row, i) => row.map((v, j) => v + B[i][j]));
+  function factors(j, dag) { const f = []; for (let i = 0; i < 3; i++) f.push(i < j ? "Z" : i === j ? (dag ? "S+" : "S-") : "I"); return f; }
+  const FM = { Z: Z2, I: I2, "S+": SP, "S-": SM };
+  function buildOp(j, dag) { const f = factors(j, dag); return kron(kron(FM[f[0]], FM[f[1]]), FM[f[2]]); }
+  const cdag = [0, 1, 2].map((j) => buildOp(j, true));
+  const cann = [0, 1, 2].map((j) => buildOp(j, false));
+  const bitsOf = (b) => [(b >> 2) & 1, (b >> 1) & 1, b & 1].join("");
+
+  const c3 = document.getElementById("f3Canvas"), g3 = c3.getContext("2d");
+  let phi = new Array(D).fill(0); phi[0] = 1;
+  let curOp = { j: 0, dag: true };
+  const CS = 34, MX = 62, MY = 56, VX1 = 392, VX2 = 560;
+
+  const mv = (A, v) => A.map((row) => row.reduce((s, a, k) => s + a * v[k], 0));
+  const curMat = () => (curOp.dag ? cdag : cann)[curOp.j];
+  const curName = () => `ĉ${curOp.dag ? "†" : ""}_${curOp.j + 1}`;
+
+  function drawVec(x0, v, title) {
+    g3.fillStyle = C.sec; g3.font = "13px system-ui, sans-serif"; g3.textAlign = "center";
+    g3.fillText(title, x0 + 35, MY - 30);
+    for (let i = 0; i < D; i++) {
+      const y = MY + i * CS;
+      g3.fillStyle = C.grid; g3.fillRect(x0, y, 70, CS - 2);
+      if (Math.abs(v[i]) > 1e-9) {
+        g3.fillStyle = v[i] > 0 ? C.orange : C.blue; g3.globalAlpha = 0.25 + 0.7 * Math.min(1, Math.abs(v[i]));
+        g3.fillRect(x0, y, 70, CS - 2); g3.globalAlpha = 1;
+      }
+      g3.fillStyle = Math.abs(v[i]) > 1e-9 ? C.ink : C.muted; g3.font = "12px system-ui, sans-serif";
+      g3.fillText(Math.abs(v[i]) < 1e-9 ? "0" : v[i].toFixed(3), x0 + 35, y + CS / 2 + 3);
+      g3.fillStyle = C.muted; g3.font = "10px system-ui, sans-serif"; g3.textAlign = "right";
+      g3.fillText(`|${bitsOf(i)}⟩`, x0 - 6, y + CS / 2 + 3); g3.textAlign = "center";
+    }
+  }
+
+  function renderThree() {
+    const Mx = curMat(), out = mv(Mx, phi);
+    g3.clearRect(0, 0, c3.width, c3.height); g3.textAlign = "center";
+    g3.fillStyle = C.sec; g3.font = "13px system-ui, sans-serif";
+    g3.fillText(`M = ${curName()}  (8×8)`, MX + (D * CS) / 2, MY - 30);
+    for (let i = 0; i < D; i++) {
+      g3.fillStyle = C.muted; g3.font = "10px system-ui, sans-serif";
+      g3.fillText(bitsOf(i), MX + i * CS + CS / 2, MY - 8);
+      g3.textAlign = "right"; g3.fillText(`|${bitsOf(i)}⟩`, MX - 6, MY + i * CS + CS / 2 + 3); g3.textAlign = "center";
+    }
+    for (let i = 0; i < D; i++) for (let j = 0; j < D; j++) {
+      const x = MX + j * CS, y = MY + i * CS, v = Mx[i][j];
+      g3.fillStyle = C.grid; g3.fillRect(x, y, CS - 2, CS - 2);
+      const active = Math.abs(phi[j]) > 1e-9;
+      if (v !== 0) {
+        g3.fillStyle = v > 0 ? C.orange : C.blue; g3.globalAlpha = active ? 0.95 : 0.4; g3.fillRect(x, y, CS - 2, CS - 2); g3.globalAlpha = 1;
+        g3.fillStyle = C.ink; g3.font = "bold 12px system-ui, sans-serif"; g3.fillText(v > 0 ? "+1" : "−1", x + CS / 2 - 1, y + CS / 2 + 4);
+      } else { g3.fillStyle = C.muted; g3.font = "10px system-ui, sans-serif"; g3.fillText("0", x + CS / 2 - 1, y + CS / 2 + 3); }
+    }
+    // outline columns that act on the current state's support
+    g3.strokeStyle = C.sec; g3.lineWidth = 1;
+    for (let j = 0; j < D; j++) if (Math.abs(phi[j]) > 1e-9) g3.strokeRect(MX + j * CS - 1, MY - 1, CS, D * CS);
+    g3.fillStyle = C.ink; g3.font = "22px system-ui, sans-serif";
+    g3.fillText("×", (MX + D * CS + VX1 - 70) / 2 + 20, MY + (D * CS) / 2);
+    g3.fillText("=", VX1 + 70 + (VX2 - VX1 - 70) / 2, MY + (D * CS) / 2);
+    drawVec(VX1, phi, "ψ");
+    drawVec(VX2, out, `ψ′ = ${curName()}ψ`);
+
+    const nrm = phi.reduce((s, v) => s + v * v, 0), nrmOut = out.reduce((s, v) => s + v * v, 0);
+    const occ = [0, 1, 2].map((q) => phi.reduce((s, v, b) => s + v * v * ((b >> (2 - q)) & 1), 0) / (nrm || 1));
+    document.getElementById("f3Occ").textContent = `${occ.map((o) => o.toFixed(2)).join("  ")}  ·  ${nrm.toFixed(3)}`;
+
+    let msg = "";
+    if (nrmOut < 1e-12) msg = `${curName()}ψ = 0: ` + (curOp.dag ? "mode already occupied (Pauli exclusion)." : "mode empty in every component.");
+    else {
+      msg = `Nonzero entries of M pick basis states; a blue −1 is the Z-string sign from an odd number of occupied modes to the left of mode ${curOp.j + 1}.`;
+    }
+    document.getElementById("f3Msg").textContent = msg;
+    document.querySelectorAll("[data-f3op]").forEach((b) => {
+      const on = b.dataset.f3op === (curOp.dag ? "c" : "d") + (curOp.j + 1);
+      b.style.outline = on ? "2px solid " + C.blue : "none";
+    });
+
+    // Jordan-Wigner factorization
+    const fs = factors(curOp.j, curOp.dag);
+    const mini = (name) => {
+      const A = FM[name], label = { Z: "Z", I: "I", "S+": "σ⁺", "S-": "σ⁻" }[name];
+      return `<span title="${label}">${label}=<table class="mini">${A.map((r) => `<tr>${r.map((v) => `<td>${v}</td>`).join("")}</tr>`).join("")}</table></span>`;
+    };
+    document.getElementById("f3JW").innerHTML =
+      `<span class="eq">${curName()}</span> = ${fs.map(mini).join(" ⊗ ")}` +
+      `<br><span style="color:var(--text-muted)">Basis order within each factor is (|0⟩,|1⟩). ` +
+      (curOp.dag ? "σ⁺ maps |0⟩→|1⟩ on mode " : "σ⁻ maps |1⟩→|0⟩ on mode ") + (curOp.j + 1) +
+      `; Z = (−1)<sup>n</sup> on each earlier mode.</span>`;
+  }
+
+  function antiTables() {
+    const zero = (A) => A.every((r) => r.every((v) => Math.abs(v) < 1e-12));
+    const isI = (A) => A.every((r, i) => r.every((v, j) => Math.abs(v - (i === j ? 1 : 0)) < 1e-12));
+    const mk = (title, f) => {
+      let t = `<table class="tbl3"><tr><td colspan="4" style="border:none">${title}</td></tr><tr><td></td>${[1, 2, 3].map((j) => `<td>${j}</td>`).join("")}</tr>`;
+      for (let i = 0; i < 3; i++) {
+        t += `<tr><td>${i + 1}</td>`;
+        for (let j = 0; j < 3; j++) { const A = f(i, j); t += `<td class="ok">${isI(A) ? "I" : zero(A) ? "0" : "?"}</td>`; }
+        t += "</tr>";
+      }
+      return t + "</table>";
+    };
+    document.getElementById("f3Anti").innerHTML =
+      mk("{ĉᵢ, ĉ†ⱼ}", (i, j) => add(mul(cann[i], cdag[j]), mul(cdag[j], cann[i]))) +
+      mk("{ĉᵢ, ĉⱼ}", (i, j) => add(mul(cann[i], cann[j]), mul(cann[j], cann[i]))) +
+      mk("{ĉ†ᵢ, ĉ†ⱼ}", (i, j) => add(mul(cdag[i], cdag[j]), mul(cdag[j], cdag[i])));
+  }
+
+
+  // ---- slots rendering ----
+  const cSl = document.getElementById("f3Slots"), gSl = cSl.getContext("2d");
+  let shownOcc = [1, 0, 0].map(() => 0), pulse = null;
+  function occOf(v) { const n = v.reduce((s, x) => s + x * x, 0) || 1; return [0, 1, 2].map((q) => v.reduce((s, x, b) => s + x * x * ((b >> (2 - q)) & 1), 0) / n); }
+  function drawSlots(dt) {
+    const g = gSl, tgt = occOf(phi), tot = phi.reduce((s, x) => s + x * x, 0);
+    g.clearRect(0, 0, cSl.width, cSl.height);
+    for (let j = 0; j < 3; j++) {
+      shownOcc[j] += (tot < 1e-12 ? 0 - shownOcc[j] : tgt[j] - shownOcc[j]) * Math.min(1, dt * 6);
+      const cx = 200 + j * 250, cy = 70;
+      g.strokeStyle = C.muted; g.lineWidth = 2; g.setLineDash([5, 4]); g.beginPath(); g.arc(cx, cy, 36, 0, 7); g.stroke(); g.setLineDash([]);
+      g.fillStyle = C.sec; g.font = "12px system-ui, sans-serif"; g.textAlign = "center"; g.fillText(`mode ${j + 1}`, cx, cy + 58);
+      const a = Math.max(0, Math.min(1, shownOcc[j]));
+      if (a > 0.01) { g.globalAlpha = a; g.fillStyle = C.aqua; g.beginPath(); g.arc(cx, cy, 18, 0, 7); g.fill(); g.strokeStyle = C.ink; g.lineWidth = 2; g.stroke(); g.globalAlpha = 1; }
+      if (pulse && pulse.j === j && pulse.t > 0) {
+        const col = pulse.dag ? C.orange : C.blue, k = pulse.t;
+        g.strokeStyle = col; g.globalAlpha = k; g.lineWidth = 3; g.beginPath();
+        g.arc(cx, cy, pulse.dag ? 60 - 40 * (1 - k) * 0.9 : 20 + 40 * (1 - k), 0, 7); g.stroke(); g.globalAlpha = 1;
+      }
+    }
+    if (pulse) pulse.t -= dt * 1.4;
+    g.fillStyle = C.muted; g.textAlign = "center"; g.font = "12px system-ui, sans-serif";
+    g.fillText(tot < 1e-12 ? "zero vector — nothing left" : `⟨N⟩ = ${tgt.reduce((a, b) => a + b, 0).toFixed(2)}`, 450, 140);
+  }
+
+  document.querySelectorAll("[data-f3op]").forEach((b) => b.addEventListener("click", () => {
+    curOp = { j: Number(b.dataset.f3op[1]) - 1, dag: b.dataset.f3op[0] === "c" }; renderThree();
+  }));
+  document.getElementById("f3Apply").addEventListener("click", () => {
+    pulse = { j: curOp.j, dag: curOp.dag, t: 1 };
+    phi = mv(curMat(), phi).map((v) => (Math.abs(v) < 1e-12 ? 0 : v));
+    if (phi.every((v) => v === 0)) toast("Result is the zero vector");
+    renderThree();
+  });
+  const setPhi = (v) => { phi = v; renderThree(); };
+  document.getElementById("f3Vac").addEventListener("click", () => setPhi([1, 0, 0, 0, 0, 0, 0, 0]));
+  document.getElementById("f3Full").addEventListener("click", () => setPhi([0, 0, 0, 0, 0, 0, 0, 1]));
+  document.getElementById("f3W").addEventListener("click", () => {
+    const a = 1 / Math.sqrt(3); setPhi([0, a, a, 0, a, 0, 0, 0]);
+  });
+  c3.addEventListener("pointerdown", (evt) => {
+    const rect = c3.getBoundingClientRect();
+    const px = (evt.clientX - rect.left) * (c3.width / rect.width), py = (evt.clientY - rect.top) * (c3.height / rect.height);
+    const row = Math.floor((py - MY) / CS);
+    if (px >= VX1 && px <= VX1 + 70 && row >= 0 && row < D) { const v = new Array(D).fill(0); v[row] = 1; setPhi(v); }
+  });
+  antiTables();
+  renderThree();
+
+  let last = null;
+  function loop(ts) {
+    const dt = last == null ? 0 : Math.min(0.05, (ts - last) / 1000); last = ts;
+    if (document.getElementById("tab-fock1").classList.contains("active")) drawBox(dt);
+    if (document.getElementById("tab-fock3").classList.contains("active")) drawSlots(dt);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
 })();
 </script>
 </body>
